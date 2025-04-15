@@ -22,7 +22,7 @@ async function createMainWindow() {
         title: 'Coast',
         center: true,
         width: 800,
-        height: 506,
+        height: 485,
         resizable: false,
         maximizable: true,
         autoHideMenuBar: true,

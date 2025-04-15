@@ -107,12 +107,12 @@ export default {
         initTerminal(item) {
             item.xterm = new Terminal({
                 cols: 80,
-                rows: 24,
+                rows: os.platform() === 'win32' ? 31 : 27,
                 cursorBlink: os.platform() === 'win32' ? true : false,
                 cursorStyle: os.platform() === 'win32' ? 'underline' : 'block',
                 fontFamily: 'monospace',
-                fontSize: 16,
-                lineHeight: 1.2,
+                fontSize: 14,
+                lineHeight: 1.0,
                 theme: {
                     background: '#000',
                     foreground: '#fff'
@@ -167,6 +167,7 @@ export default {
 <style scoped>
 .flex-container {
     box-sizing: border-box;
+    background-color: #000;
 }
 ::v-deep .terminal {
     padding: 8px;
