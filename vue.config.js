@@ -88,8 +88,8 @@ module.exports = {
                     createDesktopShortcut: true, // 创建桌面图标
                     createStartMenuShortcut: true, // 创建开始菜单图标
                     shortcutName: 'Coast', // 图标名称
-                    installerSidebar: 'public/sidebar.png',
-                    uninstallerSidebar: 'public/sidebar.png'
+                    installerSidebar: 'public/sidebar.bmp',
+                    uninstallerSidebar: 'public/sidebar.bmp'
                 },
                 asar: true
             }
