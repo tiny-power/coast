@@ -35,7 +35,7 @@
                 @tab-click="tabClick"
                 :style="{
                     'margin-left': platform === 'darwin' ? '75px' : '15px',
-                    'max-width': platform === 'darwin' ? clientWidth - 105 + 'px' : clientWidth - 175 + 'px',
+                    'max-width': platform === 'darwin' ? clientWidth - 135 + 'px' : clientWidth - 175 + 'px',
                     '-webkit-app-region': 'no-drag'
                 }"
             >
@@ -53,11 +53,16 @@
                 @click="addTab"
                 style="font-weight: bold; cursor: pointer; color: #797b88; -webkit-app-region: no-drag"
             ></i>
-            <!-- <i
+            <i
                 class="el-icon-s-open"
-                @click="addTab"
-                style="margin-left: 16px; position: absolute; right: 15px; color: #797b88; font-size: 18px"
-            ></i> -->
+                :style="{
+                    'margin-left': '16px',
+                    position: 'absolute',
+                    right: platform === 'darwin' ? '15px' : '140px',
+                    color: '#797b88',
+                    'font-size': '18px'
+                }"
+            ></i>
         </div>
         <div>
             <div v-for="(item, key) in tabs" :key="key" :label="item.label" :name="item.name">
