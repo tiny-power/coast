@@ -35,7 +35,7 @@
                 @tab-click="tabClick"
                 :style="{
                     'margin-left': platform === 'darwin' ? '75px' : '15px',
-                    'max-width': platform === 'darwin' ? clientWidth - 135 + 'px' : clientWidth - 175 + 'px',
+                    'max-width': platform === 'darwin' ? clientWidth - 135 + 'px' : clientWidth - 205 + 'px',
                     '-webkit-app-region': 'no-drag'
                 }"
             >
@@ -60,7 +60,8 @@
                     position: 'absolute',
                     right: platform === 'darwin' ? '15px' : '140px',
                     color: '#797b88',
-                    'font-size': '18px'
+                    'font-size': '18px',
+                    '-webkit-app-region': 'no-drag'
                 }"
             ></i>
         </div>
