@@ -34,8 +34,9 @@
                 @tab-remove="removeTab"
                 @tab-click="tabClick"
                 :style="{
-                    'margin-left': '75px',
-                    'max-width': clientWidth - 75 - 30 + 'px'
+                    'margin-left': platform === 'darwin' ? '75px' : '15px',
+                    'max-width': platform === 'darwin' ? clientWidth - 105 + 'px' : clientWidth - 175 + 'px',
+                    '-webkit-app-region': 'no-drag'
                 }"
             >
                 <el-tab-pane
@@ -47,7 +48,11 @@
                 >
                 </el-tab-pane>
             </el-tabs>
-            <i class="el-icon-plus" @click="addTab" style="font-weight: bold; cursor: pointer; color: #797b88"></i>
+            <i
+                class="el-icon-plus"
+                @click="addTab"
+                style="font-weight: bold; cursor: pointer; color: #797b88; -webkit-app-region: no-drag"
+            ></i>
             <!-- <i
                 class="el-icon-s-open"
                 @click="addTab"
@@ -88,7 +93,8 @@ export default {
             theme: {
                 background: '#000',
                 foreground: '#fff'
-            }
+            },
+            platform: os.platform()
         }
     },
     mounted() {
@@ -161,8 +167,8 @@ export default {
         },
         initTerminal(item) {
             item.xterm = new Terminal({
-                cursorBlink: os.platform() === 'win32' ? true : false,
-                cursorStyle: os.platform() === 'win32' ? 'underline' : 'block',
+                cursorBlink: platform === 'win32' ? true : false,
+                cursorStyle: platform === 'win32' ? 'underline' : 'block',
                 fontFamily: 'monospace',
                 fontSize: 14,
                 lineHeight: 1.0,

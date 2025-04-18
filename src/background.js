@@ -31,6 +31,7 @@ async function createMainWindow() {
         useContentSize: true,
         titleBarStyle: 'hidden',
         trafficLightPosition: { x: 10, y: 18 },
+        titleBarOverlay: { color: '#353951', symbolColor: '#fff', height: 50 },
         webPreferences: {
             contextIsolation: false,
             nodeIntegration: true,
