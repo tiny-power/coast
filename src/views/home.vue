@@ -1,19 +1,68 @@
 <template>
-    <div class="flex-container" :style="{ height: clientHeight + 'px' }">
-        <el-tabs v-model="activeName" type="card" @tab-remove="removeTab" @tab-click="tabClick">
-            <el-tab-pane
-                :closable="index == 0 ? false : true"
-                v-for="(item, key, index) in tabs"
-                :key="key"
-                :label="item.label"
-                :name="item.name"
+    <div :style="{ background: theme.background }">
+        <div class="titlebar" :style="{ background: background }">
+            <!-- <button
+                :style="{
+                    'margin-left': '75px',
+                    height: '30px',
+                    'border-radius': '8px',
+                    background: '#797b88',
+                    color: '#fff',
+                    border: 'none',
+                    padding: '0px 24px 0px 12px',
+                    position: 'relative'
+                }"
             >
-                <div :ref="item.name"></div>
-            </el-tab-pane>
-            <el-tab-pane :closable="false">
-                <i class="el-icon-plus" @click="addTab" slot="label"></i>
-            </el-tab-pane>
-        </el-tabs>
+                <i class="el-icon-menu" style="margin-right: 10px; font-size: 16px"></i>Vaults
+            </button> -->
+            <!-- <button
+                :style="{
+                    'margin-left': '8px',
+                    height: '30px',
+                    'border-radius': '8px',
+                    background: '#797b88',
+                    color: '#fff',
+                    border: 'none',
+                    padding: '0px 24px 0px 12px'
+                }"
+            >
+                <i class="el-icon-s-finance" style="margin-right: 10px; font-size: 16px"></i>SFTP
+            </button> -->
+            <el-tabs
+                v-model="activeName"
+                type="card"
+                @tab-remove="removeTab"
+                @tab-click="tabClick"
+                :style="{
+                    'margin-left': '75px',
+                    'max-width': clientWidth - 75 - 30 + 'px'
+                }"
+            >
+                <el-tab-pane
+                    :closable="index != 0"
+                    v-for="(item, key, index) in tabs"
+                    :key="key"
+                    :label="item.label"
+                    :name="item.name"
+                >
+                </el-tab-pane>
+            </el-tabs>
+            <i class="el-icon-plus" @click="addTab" style="font-weight: bold; cursor: pointer; color: #797b88"></i>
+            <!-- <i
+                class="el-icon-s-open"
+                @click="addTab"
+                style="margin-left: 16px; position: absolute; right: 15px; color: #797b88; font-size: 18px"
+            ></i> -->
+        </div>
+        <div>
+            <div v-for="(item, key) in tabs" :key="key" :label="item.label" :name="item.name">
+                <div
+                    :ref="item.name"
+                    v-show="activeName === item.name"
+                    :style="{ height: clientHeight - 62 + 'px', overflow: 'auto', padding: '6px' }"
+                ></div>
+            </div>
+        </div>
     </div>
 </template>
 
@@ -30,10 +79,16 @@ import os from 'os'
 export default {
     data() {
         return {
+            clientWidth: document.documentElement.clientWidth || document.body.clientWidth,
             clientHeight: document.documentElement.clientHeight || document.body.clientHeight,
+            background: '#353951',
             activeName: '',
             tabs: {},
-            initActiveName: ''
+            initActiveName: '',
+            theme: {
+                background: '#000',
+                foreground: '#fff'
+            }
         }
     },
     mounted() {
@@ -106,17 +161,12 @@ export default {
         },
         initTerminal(item) {
             item.xterm = new Terminal({
-                cols: 80,
-                rows: os.platform() === 'win32' ? 31 : 27,
                 cursorBlink: os.platform() === 'win32' ? true : false,
                 cursorStyle: os.platform() === 'win32' ? 'underline' : 'block',
                 fontFamily: 'monospace',
                 fontSize: 14,
                 lineHeight: 1.0,
-                theme: {
-                    background: '#000',
-                    foreground: '#fff'
-                }
+                theme: this.theme
             })
             item.xterm.open(this.$refs[item.name][0])
             item.fitAddon = new FitAddon()
@@ -129,6 +179,8 @@ export default {
             item.xterm.loadAddon(item.webLinksAddon)
             window.addEventListener('resize', () => {
                 try {
+                    this.clientWidth = document.documentElement.clientWidth || document.body.clientWidth
+                    this.clientHeight = document.documentElement.clientHeight || document.body.clientHeight
                     item.fitAddon.fit()
                 } catch (e) {
                     this.$message.error(e.message)
@@ -148,6 +200,7 @@ export default {
                 })
             })
             window.ipcRenderer.invoke('terminal', item.name)
+            item.fitAddon.fit()
             item.xterm.focus()
         },
         terminalOnData(name, data) {
@@ -165,12 +218,14 @@ export default {
 </script>
 
 <style scoped>
-.flex-container {
-    box-sizing: border-box;
-    background-color: #000;
-}
-::v-deep .terminal {
-    padding: 8px;
+.titlebar {
+    height: 50px;
+    -webkit-app-region: drag;
+    display: flex;
+    align-items: center;
+    position: sticky;
+    top: 0px;
+    z-index: 10000;
 }
 ::v-deep .el-input.is-disabled .el-input__inner {
     background-color: #f3f1f2;
@@ -317,26 +372,29 @@ export default {
 ::v-deep .el-tabs__header {
     margin: 0px;
     border-bottom: none;
-    background-color: #000;
 }
 ::v-deep .el-tabs__item {
     color: #fff;
-    padding: 0 20px;
-    height: 36px;
-    line-height: 36px;
+    height: 31px;
+    line-height: 31px;
     font-size: 12px;
     border-left: none !important;
+    border-radius: 12px !important;
+    margin-right: 8px !important;
+    background: #000;
 }
 ::v-deep .el-tabs__item.is-active {
-    border-bottom: 2px solid #f56c6c !important;
-}
-::v-deep .el-tabs__item .el-icon-close {
-    right: -16px !important;
+    border-bottom: none;
 }
 ::v-deep .el-tabs__nav {
     border: none !important;
 }
-::v-deep .el-icon-close:hover {
-    background-color: #000;
+::v-deep .el-tabs__nav-prev {
+    top: -5px;
+}
+::v-deep .el-tabs__nav-next {
+    top: -5px;
+    margin-right: 6px;
+    margin-right: 6px;
 }
 </style>
