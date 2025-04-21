@@ -21,7 +21,7 @@ async function createMainWindow() {
     mainWindow = new BrowserWindow({
         title: 'Coast',
         center: true,
-        width: 800,
+        width: 1200,
         height: 485,
         minWidth: 720,
         minHeight: 440,
@@ -31,7 +31,7 @@ async function createMainWindow() {
         useContentSize: true,
         titleBarStyle: 'hidden',
         trafficLightPosition: { x: 10, y: 18 },
-        titleBarOverlay: { color: '#353951', symbolColor: '#fff', height: 50 },
+        titleBarOverlay: { color: '#141729', symbolColor: '#797b88', height: 50 },
         webPreferences: {
             contextIsolation: false,
             nodeIntegration: true,
