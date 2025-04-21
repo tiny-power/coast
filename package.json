@@ -25,7 +25,6 @@
         "clientjs": "^0.2.1",
         "core-js": "^3.24.1",
         "electron": "22.3.25",
-        "electron-store": "^8.1.0",
         "element-ui": "^2.15.14",
         "md5": "^2.2.1",
         "node-pty": "^1.1.0-beta34",

@@ -205,8 +205,6 @@ import themes from '@/themes/index'
 import '@xterm/xterm/css/xterm.css'
 import os from 'os'
 const db = require('better-sqlite3')
-const Store = require('electron-store')
-const store = new Store()
 
 export default {
     data() {
@@ -225,10 +223,8 @@ export default {
         }
     },
     mounted() {
-        let themeName = store.get('theme')
-        if (!themeName) {
-            store.set('theme', 'Monokai')
-        }
+        let themeName = localStorage.getItem('theme') || 'Monokai'
+        localStorage.setItem('theme', themeName)
         this.theme = this.themes[themeName]
         let nodeId = Math.random().toString(36).slice(-6)
         this.initActiveName = nodeId
@@ -284,7 +280,7 @@ export default {
             xterm.options.theme = item
             xterm.focus()
             this.theme = item
-            store.set('theme', key)
+            localStorage.setItem('theme', key)
         },
         removeTab(targetName) {
             let activeName = this.activeName
