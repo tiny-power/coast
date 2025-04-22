@@ -434,14 +434,7 @@ export default {
             return `rgb(${r}, ${g}, ${b}, 0.15)`
         },
         terminalOnData(name, data) {
-            const isCtrlV = data === '\u0016'
-            if (isCtrlV) {
-                navigator.clipboard.readText().then(text => {
-                    window.ipcRenderer.invoke('write', name, text)
-                })
-            } else {
-                window.ipcRenderer.invoke('write', name, data)
-            }
+            window.ipcRenderer.invoke('write', name, data)
         }
     }
 }
