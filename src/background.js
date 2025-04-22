@@ -58,7 +58,7 @@ async function createMainWindow() {
     })
 }
 
-ipcMain.handle('terminal', async (event, name) => {
+ipcMain.handle('terminal', async (event, name, rows, cols) => {
     let ptyProcess = ptyProcessObj[name]
     if (ptyProcess) {
         ptyProcess.kill()
@@ -68,6 +68,8 @@ ipcMain.handle('terminal', async (event, name) => {
     const shell = process.env[os.platform() === 'win32' ? 'COMSPEC' : 'SHELL']
     ptyProcess = pty.spawn(shell, ['--login'], {
         name: 'xterm-256color',
+        rows: rows,
+        cols: cols,
         cwd: process.env.USERPROFILE || process.env.HOME,
         env: env
     })
@@ -81,6 +83,11 @@ ipcMain.handle('terminal', async (event, name) => {
 ipcMain.handle('write', async (event, name, data) => {
     let ptyProcess = ptyProcessObj[name]
     ptyProcess.write(data)
+})
+
+ipcMain.handle('resize', async (event, name, rows, cols) => {
+    let ptyProcess = ptyProcessObj[name]
+    ptyProcess.resize(cols, rows)
 })
 
 ipcMain.handle('setTitleBarOverlay', async (event, color) => {

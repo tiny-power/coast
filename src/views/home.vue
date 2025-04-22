@@ -291,6 +291,7 @@ export default {
             for (const key in this.tabs) {
                 this.$nextTick(() => {
                     this.tabs[key].fitAddon.fit()
+                    window.ipcRenderer.invoke('resize', key, this.tabs[key].xterm.rows, this.tabs[key].xterm.cols)
                 })
             }
         },
@@ -391,6 +392,7 @@ export default {
                     this.clientWidth = document.documentElement.clientWidth || document.body.clientWidth
                     this.clientHeight = document.documentElement.clientHeight || document.body.clientHeight
                     item.fitAddon.fit()
+                    window.ipcRenderer.invoke('resize', item.name, item.xterm.rows, item.xterm.cols)
                 } catch (e) {
                     this.$message.error(e.message)
                 }
@@ -408,8 +410,8 @@ export default {
                     window.ipcRenderer.invoke('write', item.name, text)
                 })
             })
-            window.ipcRenderer.invoke('terminal', item.name)
             item.fitAddon.fit()
+            window.ipcRenderer.invoke('terminal', item.name, item.xterm.rows, item.xterm.cols)
             item.xterm.focus()
             this.$nextTick(() => {
                 let tabsItems = document.querySelectorAll('.el-tabs__item')
