@@ -33,7 +33,7 @@ async function createMainWindow() {
         useContentSize: true,
         titleBarStyle: 'hidden',
         trafficLightPosition: { x: 10, y: 18 },
-        titleBarOverlay: { color: '#121212', symbolColor: '#797b88', height: 50 },
+        titleBarOverlay: { color: '#fff', symbolColor: '#797b88', height: 50 },
         webPreferences: {
             contextIsolation: false,
             nodeIntegration: true,
@@ -65,8 +65,8 @@ ipcMain.handle('terminal', async (event, name, rows, cols) => {
     }
     let env = process.env
     env.LANG = 'en_US.UTF-8'
-    const shell = process.env[os.platform() === 'win32' ? 'COMSPEC' : 'SHELL']
-    ptyProcess = pty.spawn(shell, ['--login'], {
+    const shell = os.platform() === 'win32' ? 'powershell.exe' : os.platform() === 'darwin' ? 'zsh' : 'bash'
+    ptyProcess = pty.spawn(shell, [os.platform() === 'win32' ? '' : '--login'], {
         name: 'xterm-256color',
         rows: rows,
         cols: cols,
