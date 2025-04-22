@@ -33,7 +33,7 @@ async function createMainWindow() {
         useContentSize: true,
         titleBarStyle: 'hidden',
         trafficLightPosition: { x: 10, y: 18 },
-        titleBarOverlay: { color: '#141729', symbolColor: '#797b88', height: 50 },
+        titleBarOverlay: { color: '#121212', symbolColor: '#797b88', height: 50 },
         webPreferences: {
             contextIsolation: false,
             nodeIntegration: true,
@@ -81,6 +81,10 @@ ipcMain.handle('terminal', async (event, name) => {
 ipcMain.handle('write', async (event, name, data) => {
     let ptyProcess = ptyProcessObj[name]
     ptyProcess.write(data)
+})
+
+ipcMain.handle('setTitleBarOverlay', async (event, color) => {
+    mainWindow.setTitleBarOverlay({ color: color })
 })
 
 ipcMain.handle('dispose', async (event, name) => {

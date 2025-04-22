@@ -182,7 +182,7 @@
                 </div>
                 <div v-if="attribute === 'color'">
                     <div style="color: #797b88; margin-top: 10px; margin-bottom: 15px; font-size: 14px">Themes</div>
-                    <div :style="{ height: clientHeight - 155 + 'px', overflow: 'auto' }">
+                    <div :style="{ height: clientHeight - 165 + 'px', overflow: 'auto' }">
                         <div
                             v-for="(item, key) in themes"
                             :key="key"
@@ -257,6 +257,7 @@ export default {
         this.tabs[nodeId] = item
         this.$nextTick(() => {
             this.initTerminal(item)
+            window.ipcRenderer.invoke('setTitleBarOverlay', this.theme.background)
         })
         window.ipcRenderer.on('terminal', (event, name, data) => {
             let item = this.tabs[name]
@@ -292,6 +293,7 @@ export default {
             }
         },
         changeTheme(key, item) {
+            window.ipcRenderer.invoke('setTitleBarOverlay', item.background)
             let xterm = this.tabs[this.activeName].xterm
             xterm.options.theme = item
             xterm.focus()
