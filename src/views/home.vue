@@ -257,7 +257,9 @@ export default {
         this.tabs[nodeId] = item
         this.$nextTick(() => {
             this.initTerminal(item)
-            window.ipcRenderer.invoke('setTitleBarOverlay', this.theme.background)
+            if (os.platform() != 'darwin') {
+                window.ipcRenderer.invoke('setTitleBarOverlay', this.theme.background)
+            }
         })
         window.ipcRenderer.on('terminal', (event, name, data) => {
             let item = this.tabs[name]
@@ -293,7 +295,9 @@ export default {
             }
         },
         changeTheme(key, item) {
-            window.ipcRenderer.invoke('setTitleBarOverlay', item.background)
+            if (os.platform() != 'darwin') {
+                window.ipcRenderer.invoke('setTitleBarOverlay', item.background)
+            }
             let xterm = this.tabs[this.activeName].xterm
             xterm.options.theme = item
             xterm.focus()
