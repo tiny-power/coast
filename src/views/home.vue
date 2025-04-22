@@ -241,6 +241,12 @@ export default {
         // console.log(stmt.all())
         let themeName = localStorage.getItem('theme') || 'Monokai'
         localStorage.setItem('theme', themeName)
+        let settingFlag = localStorage.getItem('settingFlag')
+        if (settingFlag == 'false') {
+            this.settingFlag = false
+        } else {
+            this.settingFlag = true
+        }
         this.theme = this.themes[themeName]
         let nodeId = Math.random().toString(36).slice(-6)
         this.initActiveName = nodeId
@@ -288,6 +294,7 @@ export default {
         },
         handleSetting() {
             this.settingFlag = !this.settingFlag
+            localStorage.setItem('settingFlag', this.settingFlag)
             for (const key in this.tabs) {
                 this.$nextTick(() => {
                     this.tabs[key].fitAddon.fit()
