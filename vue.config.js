@@ -29,6 +29,7 @@ module.exports = {
         electronBuilder: {
             nodeIntegration: true,
             preload: 'src/preload.js',
+            externals: ['better-sqlite3'],
             builderOptions: {
                 productName: 'Coast',
                 appId: 'com.tiny.coast',

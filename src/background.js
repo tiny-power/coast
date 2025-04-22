@@ -18,11 +18,13 @@ async function createMainWindow() {
         return
     }
 
+    console.log(app.getPath('userData'))
+
     mainWindow = new BrowserWindow({
         title: 'Coast',
         center: true,
         width: 1200,
-        height: 485,
+        height: 600,
         minWidth: 720,
         minHeight: 440,
         resizable: true,

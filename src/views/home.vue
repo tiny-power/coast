@@ -6,8 +6,8 @@
                     'margin-left': '75px',
                     height: '30px',
                     'border-radius': '8px',
-                    background: '#797b88',
-                    color: '#fff',
+                    background: 'rgb(121,123,136,0.1)',
+                    color: '#797b88',
                     border: 'none',
                     padding: '0px 24px 0px 12px',
                     position: 'relative'
@@ -20,8 +20,8 @@
                     'margin-left': '8px',
                     height: '30px',
                     'border-radius': '8px',
-                    background: '#797b88',
-                    color: '#fff',
+                    background: 'rgb(121,123,136,0.1)',
+                    color: '#797b88',
                     border: 'none',
                     padding: '0px 24px 0px 12px'
                 }"
@@ -48,7 +48,6 @@
                 >
                 </el-tab-pane>
             </el-tabs>
-
             <div
                 :style="{
                     width: '46px',
@@ -82,7 +81,7 @@
                     class="el-icon-c-scale-to-original"
                     :style="{
                         color: '#797b88',
-                        'font-size': '16px',
+                        'font-size': '20px',
                         cursor: 'pointer'
                     }"
                     @click="handleSetting"
@@ -112,7 +111,7 @@
                     'border-radius': '8px',
                     margin: '10px 10px 10px 0px',
                     'box-sizing': 'border-box',
-                    background: theme.tranground,
+                    background: 'rgb(121,123,136,0.1)',
                     overflow: 'auto'
                 }"
             >
@@ -131,12 +130,17 @@
                             version="1.1"
                             xmlns="http://www.w3.org/2000/svg"
                             p-id="7395"
-                            width="20"
-                            height="20"
+                            width="18"
+                            height="18"
+                            :style="{
+                                background: attribute === 'snippet' ? 'rgb(121, 123, 136, 0.2)' : 'transparent',
+                                padding: '6px',
+                                'border-radius': '10px'
+                            }"
                         >
                             <path
                                 d="M158.165333 499.498667A42.496 42.496 0 0 0 170.666667 469.333333V256a42.666667 42.666667 0 0 1 42.666666-42.666667 42.666667 42.666667 0 0 0 0-85.333333C142.762667 128 85.333333 185.429333 85.333333 256v195.669333l-30.165333 30.165334a42.666667 42.666667 0 0 0 0 60.330666l30.165333 30.165334V768c0 70.570667 57.429333 128 128 128a42.666667 42.666667 0 0 0 0-85.333333 42.666667 42.666667 0 0 1-42.666666-42.666667v-213.333333a42.496 42.496 0 0 0-12.501334-30.165334L145.664 512l12.501333-12.501333zM978.090667 495.658667a42.709333 42.709333 0 0 0-9.258667-13.824L938.666667 451.669333V256c0-70.570667-57.429333-128-128-128a42.666667 42.666667 0 1 0 0 85.333333 42.666667 42.666667 0 0 1 42.666666 42.666667v213.333333a42.581333 42.581333 0 0 0 12.501334 30.165334l12.501333 12.501333-12.501333 12.501333A42.496 42.496 0 0 0 853.333333 554.666667v213.333333a42.666667 42.666667 0 0 1-42.666666 42.666667 42.666667 42.666667 0 1 0 0 85.333333c70.570667 0 128-57.429333 128-128v-195.669333l30.165333-30.165334a42.709333 42.709333 0 0 0 9.258667-46.506666zM669.738667 225.450667a42.752 42.752 0 0 0-69.546667 14.762666l-255.829333 512a42.624 42.624 0 0 0 23.893333 55.424 42.922667 42.922667 0 0 0 55.552-23.765333l255.786667-512a42.538667 42.538667 0 0 0-9.813334-46.421333z"
-                                fill="#797b88"
+                                :fill="attribute === 'snippet' ? theme.foreground : '#797b88'"
                                 p-id="7396"
                             ></path>
                         </svg>
@@ -155,38 +159,46 @@
                             version="1.1"
                             xmlns="http://www.w3.org/2000/svg"
                             p-id="9624"
-                            width="20"
-                            height="20"
+                            width="18"
+                            height="18"
+                            :style="{
+                                background: attribute === 'color' ? 'rgb(121, 123, 136, 0.2)' : 'transparent',
+                                padding: '6px',
+                                'border-radius': '10px'
+                            }"
                         >
                             <path
                                 d="M512 68.266667C267.377778 68.266667 68.266667 267.377778 68.266667 512s199.111111 443.733333 443.733333 443.733333c108.088889 0 113.777778-96.711111 119.466667-159.288889 5.688889-39.822222 5.688889-85.333333 28.444444-113.777777 17.066667-17.066667 68.266667-28.444444 113.777778-39.822223 79.644444-17.066667 182.044444-39.822222 182.044444-130.844444 0-244.622222-199.111111-443.733333-443.733333-443.733333z m244.622222 489.244444c-62.577778 11.377778-125.155556 22.755556-159.288889 68.266667-39.822222 45.511111-45.511111 108.088889-51.2 159.288889-5.688889 79.644444-17.066667 85.333333-34.133333 85.333333-193.422222 0-352.711111-159.288889-352.711111-352.711111S318.577778 159.288889 512 159.288889s352.711111 159.288889 352.711111 352.711111c0 22.755556-56.888889 34.133333-108.088889 45.511111z"
-                                fill="#797b88"
+                                :fill="attribute === 'color' ? theme.foreground : '#797b88'"
                                 p-id="9625"
                             ></path>
                             <path
                                 d="M591.644444 221.866667c-51.2 0-96.711111 39.822222-96.711111 91.022222s39.822222 91.022222 96.711111 91.022222S682.666667 364.088889 682.666667 312.888889s-39.822222-91.022222-91.022223-91.022222z m0 113.777777c-11.377778 0-28.444444-11.377778-28.444444-22.755555s11.377778-22.755556 28.444444-22.755556 28.444444 11.377778 28.444445 22.755556-17.066667 22.755556-28.444445 22.755555zM352.711111 489.244444c51.2 0 91.022222-39.822222 91.022222-96.711111 0-51.2-39.822222-91.022222-91.022222-91.022222-51.2-5.688889-96.711111 39.822222-96.711111 91.022222 0 51.2 45.511111 96.711111 96.711111 96.711111z m0-119.466666c11.377778 0 22.755556 11.377778 22.755556 22.755555s-11.377778 28.444444-22.755556 28.444445-22.755556-17.066667-22.755555-28.444445 11.377778-22.755556 22.755555-22.755555zM369.777778 557.511111c-51.2 0-91.022222 39.822222-91.022222 91.022222S318.577778 739.555556 369.777778 739.555556c51.2 0 96.711111-39.822222 96.711111-91.022223s-39.822222-91.022222-96.711111-91.022222z m0 119.466667c-11.377778 0-22.755556-11.377778-22.755556-28.444445s11.377778-22.755556 22.755556-22.755555 28.444444 11.377778 28.444444 28.444444-11.377778 22.755556-28.444444 22.755556z"
-                                fill="#797b88"
+                                :fill="attribute === 'color' ? theme.foreground : '#797b88'"
                                 p-id="9626"
                             ></path>
                         </svg>
                     </div>
                 </div>
-                <div>
-                    <div
-                        v-for="(item, key) in themes"
-                        :key="key"
-                        style="color: #797b88; display: flex; margin-bottom: 15px"
-                        @click="changeTheme(key, item)"
-                    >
+                <div v-if="attribute === 'color'">
+                    <div style="color: #797b88; margin-top: 10px; margin-bottom: 15px; font-size: 14px">Themes</div>
+                    <div :style="{ height: clientHeight - 155 + 'px', overflow: 'auto' }">
                         <div
-                            :style="{
-                                width: '72px',
-                                height: '45px',
-                                background: item.background,
-                                'border-radius': '8px'
-                            }"
-                        ></div>
-                        <div style="margin-left: 10px">{{ key }}</div>
+                            v-for="(item, key) in themes"
+                            :key="key"
+                            style="color: #797b88; display: flex; margin-bottom: 15px"
+                            @click="changeTheme(key, item)"
+                        >
+                            <div
+                                :style="{
+                                    width: '72px',
+                                    height: '45px',
+                                    background: item.background,
+                                    'border-radius': '8px'
+                                }"
+                            ></div>
+                            <div style="margin-left: 10px; font-size: 13px">{{ key }}</div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -204,7 +216,7 @@ import { WebLinksAddon } from '@xterm/addon-web-links'
 import themes from '@/themes/index'
 import '@xterm/xterm/css/xterm.css'
 import os from 'os'
-const db = require('better-sqlite3')
+import Database from 'better-sqlite3'
 
 export default {
     data() {
@@ -219,10 +231,14 @@ export default {
             theme: {},
             platform: os.platform(),
             settingFlag: true,
-            themes: themes
+            themes: themes,
+            attribute: 'color'
         }
     },
     mounted() {
+        // const db = new Database('/Users/X/Documents/schema.sql', {})
+        // const stmt = db.prepare('SELECT * FROM snippet')
+        // console.log(stmt.all())
         let themeName = localStorage.getItem('theme') || 'Monokai'
         localStorage.setItem('theme', themeName)
         this.theme = this.themes[themeName]
@@ -281,6 +297,18 @@ export default {
             xterm.focus()
             this.theme = item
             localStorage.setItem('theme', key)
+            this.$nextTick(() => {
+                let tabsItems = document.querySelectorAll('.el-tabs__item')
+                tabsItems.forEach(item => {
+                    if (item.classList.contains('is-active')) {
+                        item.style.backgroundColor = this.hexToRgb(this.theme.foreground)
+                        item.style.color = this.theme.foreground
+                    } else {
+                        item.style.backgroundColor = 'rgb(121,123,136,0.1)'
+                        item.style.color = '#797b88'
+                    }
+                })
+            })
         },
         removeTab(targetName) {
             let activeName = this.activeName
@@ -291,6 +319,21 @@ export default {
             this.activeName = activeName
             this.$delete(this.tabs, targetName)
             // delete this.tabs[targetName]
+            this.$nextTick(() => {
+                let item = this.tabs[this.activeName]
+                item.xterm.options.theme = this.theme
+                item.xterm.focus()
+                let tabsItems = document.querySelectorAll('.el-tabs__item')
+                tabsItems.forEach(item => {
+                    if (item.classList.contains('is-active')) {
+                        item.style.backgroundColor = this.hexToRgb(this.theme.foreground)
+                        item.style.color = this.theme.foreground
+                    } else {
+                        item.style.backgroundColor = 'rgb(121,123,136,0.1)'
+                        item.style.color = '#797b88'
+                    }
+                })
+            })
         },
         dispose(item) {
             item.fitAddon.dispose()
@@ -304,7 +347,18 @@ export default {
             let item = this.tabs[tab.name]
             if (item) {
                 this.$nextTick(() => {
+                    item.xterm.options.theme = this.theme
                     item.xterm.focus()
+                    let tabsItems = document.querySelectorAll('.el-tabs__item')
+                    tabsItems.forEach(item => {
+                        if (item.classList.contains('is-active')) {
+                            item.style.backgroundColor = this.hexToRgb(this.theme.foreground)
+                            item.style.color = this.theme.foreground
+                        } else {
+                            item.style.backgroundColor = 'rgb(121,123,136,0.1)'
+                            item.style.color = '#797b88'
+                        }
+                    })
                 })
             }
         },
@@ -354,10 +408,22 @@ export default {
             this.$nextTick(() => {
                 let tabsItems = document.querySelectorAll('.el-tabs__item')
                 tabsItems.forEach(item => {
-                    item.style.backgroundColor = this.theme.tranground
-                    item.style.color = '#797b88'
+                    if (item.classList.contains('is-active')) {
+                        item.style.backgroundColor = this.hexToRgb(this.theme.foreground)
+                        item.style.color = this.theme.foreground
+                    } else {
+                        item.style.backgroundColor = 'rgb(121,123,136,0.1)'
+                        item.style.color = '#797b88'
+                    }
                 })
             })
+        },
+        hexToRgb(hex) {
+            hex = hex.replace(/^#/, '')
+            let r = parseInt(hex.substring(0, 2), 16)
+            let g = parseInt(hex.substring(2, 4), 16)
+            let b = parseInt(hex.substring(4, 6), 16)
+            return `rgb(${r}, ${g}, ${b}, 0.15)`
         },
         terminalOnData(name, data) {
             const isCtrlV = data === '\u0016'
