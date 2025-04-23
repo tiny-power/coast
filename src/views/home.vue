@@ -493,7 +493,11 @@ export default {
         },
         handleRun(script) {
             let item = this.tabs[this.activeName]
-            window.ipcRenderer.invoke('write', this.activeName, platform === 'win32' ? script + '\r\n' : script + '\n')
+            window.ipcRenderer.invoke(
+                'write',
+                this.activeName,
+                this.platform === 'win32' ? script + '\r\n' : script + '\n'
+            )
             item.xterm.focus()
         },
         handlePaste(script) {
@@ -670,8 +674,8 @@ export default {
         },
         initTerminal(item) {
             item.xterm = new Terminal({
-                cursorBlink: platform === 'win32' ? true : false,
-                cursorStyle: platform === 'win32' ? 'underline' : 'block',
+                cursorBlink: this.platform === 'win32' ? true : false,
+                cursorStyle: this.platform === 'win32' ? 'underline' : 'block',
                 fontFamily: 'monospace',
                 fontSize: 14,
                 lineHeight: 1.2,
