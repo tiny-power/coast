@@ -4,6 +4,8 @@ const isDevelopment = process.env.NODE_ENV !== 'production'
 import path from 'path'
 import os from 'os'
 import * as pty from 'node-pty'
+import Database from 'better-sqlite3'
+import fs from 'fs'
 
 protocol.registerSchemesAsPrivileged([
     { scheme: 'app', privileges: { secure: true, standard: true, supportFetchAPI: true } }
@@ -11,14 +13,13 @@ protocol.registerSchemesAsPrivileged([
 
 let mainWindow = null
 let ptyProcessObj = {}
+let db
 async function createMainWindow() {
     // 禁止程序多开
     if (!app.requestSingleInstanceLock()) {
         app.quit()
         return
     }
-
-    console.log(app.getPath('userData'))
 
     mainWindow = new BrowserWindow({
         title: 'Coast',
@@ -51,12 +52,74 @@ async function createMainWindow() {
 
     mainWindow.on('close', event => {
         event.preventDefault()
+        handleExit()
         for (let key in ptyProcessObj) {
             let ptyProcess = ptyProcessObj[key]
             ptyProcess.kill()
         }
     })
+    createDatabaseDir()
 }
+
+function createDatabaseDir() {
+    console.log(app.getPath('userData'))
+    const databasePath = path.join(app.getPath('userData'), 'database')
+    if (!fs.existsSync(databasePath)) {
+        fs.mkdirSync(databasePath, { recursive: true })
+    }
+    db = new Database(path.join(databasePath, 'schema.db'), {
+        verbose: console.log
+    })
+    db.pragma('journal_mode = WAL')
+    try {
+        db.exec(
+            `CREATE TABLE  snippet (
+                id integer primary key AUTOINCREMENT,
+                name text,
+                script text,
+                targets text,
+                create_time TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                upodate_time TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+            )`
+        )
+    } catch (error) {
+        console.log(error)
+    }
+}
+
+function handleExit() {
+    try {
+        db.close()
+        console.log('Database connection closed gracefully.')
+    } catch (error) {
+        console.error('Error closing database:', error.message)
+    }
+}
+
+ipcMain.handle('db_all', async (event, query, params = []) => {
+    const stmt = db.prepare(query)
+    return stmt.all(params)
+})
+
+ipcMain.handle('db_get', async (event, query, params = []) => {
+    const stmt = db.prepare(query)
+    return stmt.get(params)
+})
+
+ipcMain.handle('db_insert', async (event, query, params = []) => {
+    const stmt = db.prepare(query)
+    return stmt.run(params)
+})
+
+ipcMain.handle('db_update', async (event, query, params = []) => {
+    const stmt = db.prepare(query)
+    return stmt.run(params)
+})
+
+ipcMain.handle('db_delete', async (event, query, params = []) => {
+    const stmt = db.prepare(query)
+    return stmt.run(params)
+})
 
 ipcMain.handle('terminal', async (event, name, rows, cols) => {
     let ptyProcess = ptyProcessObj[name]
