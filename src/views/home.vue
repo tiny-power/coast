@@ -462,35 +462,6 @@ export default {
             }
         })
         this.querySnippetAll()
-        // const conn = new Client()
-        // conn.on('ready', () => {
-        //     console.log('Client :: ready')
-        //     conn.shell({ cols: 80, rows: 30 }, (err, stream) => {
-        //         if (err) throw err
-        //         stream
-        //             .on('close', () => {
-        //                 console.log('Stream :: close')
-        //                 conn.end()
-        //             })
-        //             .on('data', data => {
-        //                 console.log('OUTPUT: ' + data)
-        //             })
-        //         stream.write('ls\n') //stream.end('ls\n')
-        //         stream.close()
-        //     })
-        // })
-        //     .on('close', () => {
-        //         console.log('close')
-        //     })
-        //     .on('error', error => {
-        //         console.log(error)
-        //     })
-        //     .connect({
-        //         host: '183.252.195.31',
-        //         port: 22,
-        //         username: 'root',
-        //         password: 'admin@VM123'
-        //     })
     },
     methods: {
         showMenu(event, index) {
