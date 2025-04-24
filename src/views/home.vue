@@ -32,7 +32,7 @@
                 }"
                 @click="handleSFTP"
             >
-                <i class="el-icon-s-finance" style="margin-right: 10px; font-size: 16px"></i>SFTP
+                <i class="el-icon-folder" style="margin-right: 10px; font-size: 16px"></i>SFTP
             </button>
             <el-tabs
                 v-model="activeName"
@@ -154,9 +154,7 @@
                 'box-sizing': 'border-box',
                 padding: '30px'
             }"
-        >
-            <el-empty description="Looking forward to it to the fullest"></el-empty>
-        </div>
+        ></div>
         <div v-show="classify === 'Sessions'">
             <div style="display: flex">
                 <div v-for="(item, key) in tabs" :key="key" :label="item.label" :name="item.name" style="flex: 1">
@@ -447,9 +445,23 @@
                                         width: '72px',
                                         height: '45px',
                                         background: item.background,
-                                        'border-radius': '8px'
+                                        'border-radius': '8px',
+                                        display: 'flex',
+                                        'justify-content': 'center',
+                                        'align-items': 'center'
                                     }"
-                                ></div>
+                                >
+                                    <i
+                                        class="el-icon-sunny"
+                                        :style="{ color: item.foreground, 'font-size': '22px' }"
+                                        v-if="item.type === 'light'"
+                                    ></i>
+                                    <i
+                                        class="el-icon-moon"
+                                        :style="{ color: item.foreground, 'font-size': '22px' }"
+                                        v-else
+                                    ></i>
+                                </div>
                                 <div style="margin-left: 10px; font-size: 13px">{{ key }}</div>
                             </div>
                         </div>

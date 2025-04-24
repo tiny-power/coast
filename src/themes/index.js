@@ -1,5 +1,6 @@
 export default {
     Monokai: {
+        type: 'dark',
         foreground: '#f9f9f9',
         background: '#121212',
         cursor: '#fb0007',
@@ -29,6 +30,7 @@ export default {
         brightWhite: '#ffffff'
     },
     Dracula: {
+        type: 'dark',
         foreground: '#f8f8f2',
         background: '#1e1f29',
         cursor: '#bbbbbb',
@@ -58,6 +60,7 @@ export default {
         brightWhite: '#ffffff'
     },
     Pro: {
+        type: 'dark',
         foreground: '#f2f2f2',
         background: '#000000',
         cursor: '#4d4d4d',
@@ -87,6 +90,7 @@ export default {
         brightWhite: '#e5e5e5'
     },
     'Solarized Dark': {
+        type: 'dark',
         foreground: '#708284',
         background: '#001e27',
         cursor: '#708284',
@@ -116,6 +120,7 @@ export default {
         brightWhite: '#fcf4dc'
     },
     'Solarized Light': {
+        type: 'light',
         foreground: '#536870',
         background: '#fcf4dc',
         cursor: '#536870',
@@ -145,6 +150,7 @@ export default {
         brightWhite: '#fcf4dc'
     },
     'OneHalf Dark': {
+        type: 'dark',
         foreground: '#dcdfe4',
         background: '#282c34',
         cursor: '#a3b3cc',
@@ -174,6 +180,7 @@ export default {
         brightWhite: '#dcdfe4'
     },
     'Material Light': {
+        type: 'light',
         foreground: '#232322',
         background: '#eaeaea',
         cursor: '#16afca',
@@ -203,6 +210,7 @@ export default {
         brightWhite: '#d9d9d9'
     },
     'Material Dark': {
+        type: 'dark',
         foreground: '#e5e5e5',
         background: '#232322',
         cursor: '#16afca',
@@ -232,6 +240,7 @@ export default {
         brightWhite: '#d9d9d9'
     },
     'Gruvbox Dark': {
+        type: 'dark',
         foreground: '#e6d4a3',
         background: '#1e1e1e',
         cursor: '#bbbbbb',
@@ -261,6 +270,7 @@ export default {
         brightWhite: '#e6d4a3'
     },
     Ayu: {
+        type: 'dark',
         foreground: '#e6e1cf',
         background: '#0f1419',
         cursor: '#f29718',
