@@ -588,7 +588,9 @@ export default {
         },
         handleRun(script) {
             let item = this.tabs[this.activeName]
-            window.ipcRenderer.invoke('write', this.activeName, '\x15')
+            if (this.platform != 'win32') {
+                window.ipcRenderer.invoke('write', this.activeName, '\x15')
+            }
             window.ipcRenderer.invoke(
                 'write',
                 this.activeName,
@@ -598,7 +600,9 @@ export default {
         },
         handlePaste(script) {
             let item = this.tabs[this.activeName]
-            window.ipcRenderer.invoke('write', this.activeName, '\x15')
+            if (this.platform != 'win32') {
+                window.ipcRenderer.invoke('write', this.activeName, '\x15')
+            }
             window.ipcRenderer.invoke('write', this.activeName, script)
             item.xterm.focus()
         },
