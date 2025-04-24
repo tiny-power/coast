@@ -73,11 +73,30 @@ function createDatabaseDir() {
     db.pragma('journal_mode = WAL')
     try {
         db.exec(
-            `CREATE TABLE  snippet (
+            `CREATE TABLE snippet (
                 id integer primary key AUTOINCREMENT,
                 name text,
                 script text,
                 targets text,
+                create_time TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                upodate_time TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+            )`
+        )
+    } catch (error) {
+        console.log(error)
+    }
+    try {
+        db.exec(
+            `CREATE TABLE session (
+                id integer primary key AUTOINCREMENT,
+                label text,
+                tags text,
+                protocol text,
+                host text,
+                port integer,
+                username text,
+                password text,
+                variable text,
                 create_time TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
                 upodate_time TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
             )`

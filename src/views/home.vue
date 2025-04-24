@@ -1,19 +1,20 @@
 <template>
     <div :style="{ background: theme.background }" @click="isMenuVisible = false">
-        <div class="titlebar" :style="{ background: theme.background }">
+        <div class="titlebar" :style="{ background: classify === 'Sessions' ? theme.background : mainBackground }">
             <button
                 :style="{
                     'margin-left': platform === 'darwin' ? '75px' : '10px',
                     height: '30px',
                     'border-radius': '8px',
                     background: 'rgb(121,123,136,0.1)',
-                    color: '#797b88',
+                    color: classify === 'Sessions' ? '#797b88' : '#fff',
                     border: 'none',
                     padding: '0px 24px 0px 12px',
                     position: 'relative',
                     cursor: 'pointer',
                     '-webkit-app-region': 'no-drag'
                 }"
+                @click="handleHosts"
             >
                 <i class="el-icon-menu" style="margin-right: 10px; font-size: 16px"></i>Hosts
             </button>
@@ -23,12 +24,13 @@
                     height: '30px',
                     'border-radius': '8px',
                     background: 'rgb(121,123,136,0.1)',
-                    color: '#797b88',
+                    color: classify === 'Sessions' ? '#797b88' : '#fff',
                     border: 'none',
                     padding: '0px 24px 0px 12px',
                     cursor: 'pointer',
                     '-webkit-app-region': 'no-drag'
                 }"
+                @click="handleSFTP"
             >
                 <i class="el-icon-s-finance" style="margin-right: 10px; font-size: 16px"></i>SFTP
             </button>
@@ -79,6 +81,7 @@
                     'justify-content': 'center',
                     'align-items': 'center'
                 }"
+                v-if="classify === 'Sessions'"
             >
                 <i
                     class="el-icon-c-scale-to-original"
@@ -91,7 +94,70 @@
                 ></i>
             </div>
         </div>
-        <div style="display: flex">
+        <div
+            v-if="classify === 'Hosts'"
+            :style="{
+                background: auxBackgroudColor,
+                height: clientHeight - 50 + 'px',
+                overflow: 'auto',
+                'box-sizing': 'border-box',
+                padding: '30px'
+            }"
+        >
+            <div style="display: grid; grid-gap: 12px; grid-template-columns: repeat(auto-fit, minmax(290px, 350px))">
+                <div
+                    style="
+                        background: #fff;
+                        height: 60px;
+                        border-radius: 12px;
+                        display: flex;
+                        align-items: center;
+                        box-sizing: border-box;
+                        cursor: pointer;
+                    "
+                >
+                    <div
+                        style="background: #014978; width: 40px; height: 40px; border-radius: 8px; margin: 0px 15px"
+                    ></div>
+                    <div>
+                        <div style="font-size: 13px">192.168.0.1</div>
+                        <div style="font-size: 10px">ssh, root</div>
+                    </div>
+                </div>
+                <div
+                    style="
+                        background: #fff;
+                        height: 60px;
+                        border-radius: 12px;
+                        display: flex;
+                        align-items: center;
+                        box-sizing: border-box;
+                        cursor: pointer;
+                    "
+                >
+                    <div
+                        style="background: #014978; width: 40px; height: 40px; border-radius: 8px; margin: 0px 15px"
+                    ></div>
+                    <div>
+                        <div style="font-size: 13px">192.168.0.1</div>
+                        <div style="font-size: 10px">ssh, root</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div
+            v-if="classify === 'SFTP'"
+            :style="{
+                background: '#f7f9fa',
+                height: clientHeight - 50 + 'px',
+                overflow: 'auto',
+                'box-sizing': 'border-box',
+                padding: '30px'
+            }"
+        >
+            <el-empty description="Looking forward to it to the fullest"></el-empty>
+        </div>
+        <div style="display: flex" v-show="classify === 'Sessions'">
             <div v-for="(item, key) in tabs" :key="key" :label="item.label" :name="item.name" style="flex: 1">
                 <div
                     :ref="item.name"
@@ -400,6 +466,7 @@ const { Client } = require('ssh2')
 export default {
     data() {
         return {
+            classify: 'Sessions',
             clientWidth: document.documentElement.clientWidth || document.body.clientWidth,
             clientHeight: document.documentElement.clientHeight || document.body.clientHeight,
             mainBackground: '#353951',
@@ -467,6 +534,24 @@ export default {
         this.querySnippetAll()
     },
     methods: {
+        handleHosts() {
+            this.classify = 'Hosts'
+            this.$nextTick(() => {
+                let tabsItems = document.querySelectorAll('.el-tabs__item')
+                tabsItems.forEach(item => {
+                    item.style.color = '#fff'
+                })
+            })
+        },
+        handleSFTP() {
+            this.classify = 'SFTP'
+            this.$nextTick(() => {
+                let tabsItems = document.querySelectorAll('.el-tabs__item')
+                tabsItems.forEach(item => {
+                    item.style.color = '#fff'
+                })
+            })
+        },
         showMenu(event, index) {
             this.index = index
             this.isMenuVisible = true
@@ -578,6 +663,7 @@ export default {
             )
         },
         addTab() {
+            this.classify = 'Sessions'
             let nodeId = Math.random().toString(36).slice(-6)
             let item = {
                 label: 'Terminal',
@@ -660,6 +746,7 @@ export default {
             window.ipcRenderer.invoke('dispose', item.name)
         },
         tabClick(tab) {
+            this.classify = 'Sessions'
             let item = this.tabs[tab.name]
             if (item) {
                 this.$nextTick(() => {
