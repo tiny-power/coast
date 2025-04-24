@@ -117,11 +117,22 @@
                     "
                 >
                     <div
-                        style="background: #014978; width: 40px; height: 40px; border-radius: 8px; margin: 0px 15px"
-                    ></div>
+                        style="
+                            background: #014978;
+                            width: 40px;
+                            height: 40px;
+                            border-radius: 8px;
+                            margin: 0px 15px;
+                            display: flex;
+                            justify-content: center;
+                            align-items: center;
+                        "
+                    >
+                        <img :src="require('@/assets/server.png')" width="20px" height="20px" />
+                    </div>
                     <div>
-                        <div style="font-size: 13px">192.168.0.1</div>
-                        <div style="font-size: 10px">ssh, root</div>
+                        <div style="font-size: 13px; color: #303133; font-weight: 450">192.168.0.1</div>
+                        <div style="font-size: 10px; color: #909399">ssh, root</div>
                     </div>
                 </div>
                 <div
@@ -136,11 +147,22 @@
                     "
                 >
                     <div
-                        style="background: #014978; width: 40px; height: 40px; border-radius: 8px; margin: 0px 15px"
-                    ></div>
+                        style="
+                            background: #eea721;
+                            width: 40px;
+                            height: 40px;
+                            border-radius: 8px;
+                            margin: 0px 15px;
+                            display: flex;
+                            justify-content: center;
+                            align-items: center;
+                        "
+                    >
+                        <img :src="require('@/assets/centos.png')" width="20px" height="20px" />
+                    </div>
                     <div>
-                        <div style="font-size: 13px">192.168.0.1</div>
-                        <div style="font-size: 10px">ssh, root</div>
+                        <div style="font-size: 13px; color: #303133; font-weight: 450">192.168.0.159</div>
+                        <div style="font-size: 10px; color: #909399">ssh, root, centos, arm64</div>
                     </div>
                 </div>
             </div>
