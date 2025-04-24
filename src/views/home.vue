@@ -3,7 +3,7 @@
         <div class="titlebar" :style="{ background: theme.background }">
             <button
                 :style="{
-                    'margin-left': '75px',
+                    'margin-left': platform === 'darwin' ? '75px' : '10px',
                     height: '30px',
                     'border-radius': '8px',
                     background: 'rgb(121,123,136,0.1)',
@@ -36,7 +36,7 @@
                 @tab-remove="removeTab"
                 @tab-click="tabClick"
                 :style="{
-                    'max-width': platform === 'darwin' ? clientWidth - 367 + 'px' : clientWidth - 229 + 'px',
+                    'max-width': platform === 'darwin' ? clientWidth - 367 + 'px' : clientWidth - 439 + 'px',
                     '-webkit-app-region': 'no-drag'
                 }"
             >
