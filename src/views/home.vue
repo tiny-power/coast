@@ -1,7 +1,7 @@
 <template>
     <div :style="{ background: theme.background }" @click="isMenuVisible = false">
         <div class="titlebar" :style="{ background: theme.background }">
-            <!-- <button
+            <button
                 :style="{
                     'margin-left': '75px',
                     height: '30px',
@@ -10,12 +10,13 @@
                     color: '#797b88',
                     border: 'none',
                     padding: '0px 24px 0px 12px',
-                    position: 'relative'
+                    position: 'relative',
+                    cursor: 'pointer'
                 }"
             >
-                <i class="el-icon-menu" style="margin-right: 10px; font-size: 16px"></i>Vaults
-            </button> -->
-            <!-- <button
+                <i class="el-icon-menu" style="margin-right: 10px; font-size: 16px"></i>Hosts
+            </button>
+            <button
                 :style="{
                     'margin-left': '8px',
                     height: '30px',
@@ -23,19 +24,19 @@
                     background: 'rgb(121,123,136,0.1)',
                     color: '#797b88',
                     border: 'none',
-                    padding: '0px 24px 0px 12px'
+                    padding: '0px 24px 0px 12px',
+                    cursor: 'pointer'
                 }"
             >
                 <i class="el-icon-s-finance" style="margin-right: 10px; font-size: 16px"></i>SFTP
-            </button> -->
+            </button>
             <el-tabs
                 v-model="activeName"
                 type="card"
                 @tab-remove="removeTab"
                 @tab-click="tabClick"
                 :style="{
-                    'margin-left': platform === 'darwin' ? '75px' : '0px',
-                    'max-width': platform === 'darwin' ? clientWidth - 167 + 'px' : clientWidth - 229 + 'px',
+                    'max-width': platform === 'darwin' ? clientWidth - 367 + 'px' : clientWidth - 229 + 'px',
                     '-webkit-app-region': 'no-drag'
                 }"
             >
@@ -467,8 +468,8 @@ export default {
         showMenu(event, index) {
             this.index = index
             this.isMenuVisible = true
-            this.menuTop = event.clientY // 获取鼠标Y坐标
-            this.menuLeft = event.clientX // 获取鼠标X坐标
+            this.menuTop = event.clientY
+            this.menuLeft = event.clientX
         },
         menuAction(action) {
             this.isMenuVisible = false
