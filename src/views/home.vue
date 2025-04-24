@@ -11,7 +11,8 @@
                     border: 'none',
                     padding: '0px 24px 0px 12px',
                     position: 'relative',
-                    cursor: 'pointer'
+                    cursor: 'pointer',
+                    '-webkit-app-region': 'no-drag'
                 }"
             >
                 <i class="el-icon-menu" style="margin-right: 10px; font-size: 16px"></i>Hosts
@@ -25,7 +26,8 @@
                     color: '#797b88',
                     border: 'none',
                     padding: '0px 24px 0px 12px',
-                    cursor: 'pointer'
+                    cursor: 'pointer',
+                    '-webkit-app-region': 'no-drag'
                 }"
             >
                 <i class="el-icon-s-finance" style="margin-right: 10px; font-size: 16px"></i>SFTP
