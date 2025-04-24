@@ -542,6 +542,9 @@ export default {
                     item.style.color = '#fff'
                 })
             })
+            if (os.platform() != 'darwin') {
+                window.ipcRenderer.invoke('setTitleBarOverlay', this.mainBackground)
+            }
         },
         handleSFTP() {
             this.classify = 'SFTP'
@@ -551,6 +554,9 @@ export default {
                     item.style.color = '#fff'
                 })
             })
+            if (os.platform() != 'darwin') {
+                window.ipcRenderer.invoke('setTitleBarOverlay', this.mainBackground)
+            }
         },
         showMenu(event, index) {
             this.index = index
@@ -679,6 +685,9 @@ export default {
             this.$nextTick(() => {
                 this.initTerminal(item)
             })
+            if (os.platform() != 'darwin') {
+                window.ipcRenderer.invoke('setTitleBarOverlay', this.theme.background)
+            }
         },
         handleSetting() {
             this.settingFlag = !this.settingFlag
@@ -763,6 +772,9 @@ export default {
                         }
                     })
                 })
+            }
+            if (os.platform() != 'darwin') {
+                window.ipcRenderer.invoke('setTitleBarOverlay', this.theme.background)
             }
         },
         initTerminal(item) {
