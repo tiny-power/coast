@@ -60,6 +60,7 @@ async function createMainWindow() {
             ptyProcess.kill()
         }
         if (Object.keys(ptyProcessObj).length === 0 && isClose) {
+            mainWindow.webContents.send('close')
             mainWindow.destroy()
         }
     })
@@ -192,6 +193,7 @@ ipcMain.handle('dispose', async (event, name) => {
 function ptyProcessExit(code, name) {
     delete ptyProcessObj[name]
     if (Object.keys(ptyProcessObj).length === 0 && isClose) {
+        mainWindow.webContents.send('close')
         mainWindow.destroy()
     }
 }

@@ -643,6 +643,19 @@ export default {
                 item.xterm.write(data)
             }
         })
+        window.ipcRenderer.on('close', event => {
+            for (const key in this.tabs) {
+                let item = this.tabs[key]
+                tab.fitAddon.dispose()
+                tab.clipboardAddon.dispose()
+                tab.searchAddon.dispose()
+                tab.webLinksAddon.dispose()
+                tab.xterm.dispose(this.$refs[tab.name])
+                if (tab.protocol === 'ssh') {
+                    tab.stream.close()
+                }
+            }
+        })
         this.querySnippetAll()
         this.querySessionAll()
     },
