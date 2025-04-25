@@ -110,7 +110,7 @@
                 padding: '30px'
             }"
         >
-            <div v-if="Object.keys(tabs).length != 0">
+            <div v-if="sessionList.length != 0">
                 <div style="font-size: 18px; color: #303133; font-weight: 450; margin-bottom: 20px">Hosts</div>
                 <div
                     style="display: grid; grid-gap: 12px; grid-template-columns: repeat(auto-fit, minmax(290px, 350px))"
