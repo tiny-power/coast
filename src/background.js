@@ -52,7 +52,7 @@ async function createMainWindow() {
 
     mainWindow.on('close', event => {
         event.preventDefault()
-        handleExit()
+        handleDbExit()
         for (let key in ptyProcessObj) {
             let ptyProcess = ptyProcessObj[key]
             ptyProcess.kill()
@@ -106,7 +106,7 @@ function createDatabaseDir() {
     }
 }
 
-function handleExit() {
+function handleDbExit() {
     try {
         db.close()
         console.log('Database connection closed gracefully.')
@@ -178,14 +178,16 @@ ipcMain.handle('setTitleBarOverlay', async (event, color) => {
 
 ipcMain.handle('dispose', async (event, name) => {
     let ptyProcess = ptyProcessObj[name]
-    ptyProcess.kill()
+    if (ptyProcess) {
+        ptyProcess.kill()
+    }
 })
 
 function ptyProcessExit(code, name) {
     delete ptyProcessObj[name]
-    if (Object.keys(ptyProcessObj).length === 0) {
-        mainWindow.destroy()
-    }
+    // if (Object.keys(ptyProcessObj).length === 0) {
+    //     mainWindow.destroy()
+    // }
 }
 
 // 当运行第二个实例时，将会聚焦到win这个窗口

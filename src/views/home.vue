@@ -1,5 +1,5 @@
 <template>
-    <div :style="{ background: theme.background }" @click="isMenuVisible = false">
+    <div :style="{ background: theme.background }" @click="handleClick">
         <div class="titlebar" :style="{ background: classify === 'Sessions' ? theme.background : mainBackground }">
             <button
                 :style="{
@@ -45,30 +45,36 @@
                 }"
             >
                 <el-tab-pane
-                    :closable="index != 0"
+                    :closable="true"
                     v-for="(item, key, index) in tabs"
                     :key="key"
-                    :label="item.label"
+                    :label="index + 1 + '. ' + item.label"
                     :name="item.name"
                 >
                 </el-tab-pane>
+                <!-- :closable="index != 0" -->
             </el-tabs>
-            <div
-                :style="{
-                    width: '46px',
-                    height: '50px',
-                    '-webkit-app-region': 'no-drag',
-                    display: 'flex',
-                    'justify-content': 'center',
-                    'align-items': 'center'
-                }"
-            >
-                <i
-                    class="el-icon-plus"
-                    style="cursor: pointer; color: #797b88; font-weight: bold; font-size: 14px"
-                    @click="addTab"
-                ></i>
-            </div>
+            <el-dropdown size="medium" @command="handleCommand">
+                <div
+                    :style="{
+                        width: '46px',
+                        height: '50px',
+                        '-webkit-app-region': 'no-drag',
+                        display: 'flex',
+                        'justify-content': 'center',
+                        'align-items': 'center'
+                    }"
+                >
+                    <i
+                        class="el-icon-plus"
+                        style="cursor: pointer; color: #797b88; font-weight: bold; font-size: 14px"
+                    ></i>
+                </div>
+                <el-dropdown-menu slot="dropdown" placement="bottom">
+                    <el-dropdown-item command="shell">Local Shell</el-dropdown-item>
+                    <el-dropdown-item command="ssh">SSH</el-dropdown-item>
+                </el-dropdown-menu>
+            </el-dropdown>
             <div
                 :style="{
                     width: '46px',
@@ -104,6 +110,7 @@
                 padding: '30px'
             }"
         >
+            <div style="font-size: 18px; color: #303133; font-weight: 450; margin-bottom: 20px">Hosts</div>
             <div style="display: grid; grid-gap: 12px; grid-template-columns: repeat(auto-fit, minmax(290px, 350px))">
                 <div
                     style="
@@ -115,6 +122,10 @@
                         box-sizing: border-box;
                         cursor: pointer;
                     "
+                    v-for="(item, index) in sessionList"
+                    :key="index"
+                    @dblclick="dblclick(item)"
+                    @contextmenu.prevent="showSessionMenu($event, index)"
                 >
                     <div
                         style="
@@ -131,40 +142,29 @@
                         <img :src="require('@/assets/server.png')" width="20px" height="20px" />
                     </div>
                     <div>
-                        <div style="font-size: 13px; color: #303133; font-weight: 450">192.168.0.1</div>
-                        <div style="font-size: 10px; color: #909399">ssh, root</div>
+                        <div style="font-size: 13px; color: #303133; font-weight: 450">{{ item.host }}</div>
+                        <div style="font-size: 10px; color: #909399">{{ item.protocol + ', ' + item.username }}</div>
+                        <div></div>
                     </div>
                 </div>
-                <div
-                    style="
-                        background: #fff;
-                        height: 60px;
-                        border-radius: 12px;
-                        display: flex;
-                        align-items: center;
-                        box-sizing: border-box;
-                        cursor: pointer;
-                    "
+                <ul
+                    v-if="isSessionMenuVisible"
+                    :style="{
+                        top: menuTop + 'px',
+                        left: menuLeft + 'px',
+                        background: '#f7f9fa',
+                        color: '#303133'
+                    }"
                 >
-                    <div
-                        style="
-                            background: #eea721;
-                            width: 40px;
-                            height: 40px;
-                            border-radius: 8px;
-                            margin: 0px 15px;
-                            display: flex;
-                            justify-content: center;
-                            align-items: center;
-                        "
-                    >
-                        <img :src="require('@/assets/centos.png')" width="20px" height="20px" />
-                    </div>
-                    <div>
-                        <div style="font-size: 13px; color: #303133; font-weight: 450">192.168.0.159</div>
-                        <div style="font-size: 10px; color: #909399">ssh, root, centos, arm64</div>
-                    </div>
-                </div>
+                    <li @click="menuSessionAction('edit')" style="width: 250px">
+                        <i class="el-icon-edit" style="color: #303133; margin-right: 8px; font-size: 16px"></i>
+                        <span>Edit Host</span>
+                    </li>
+                    <li @click="menuSessionAction('remove')" style="width: 250px">
+                        <i class="el-icon-delete-solid" style="color: #303133; margin-right: 8px; font-size: 16px"></i>
+                        <span>Remove</span>
+                    </li>
+                </ul>
             </div>
         </div>
         <div
@@ -304,7 +304,7 @@
                                     padding: '10px 10px',
                                     'font-size': '13px'
                                 }"
-                                @contextmenu.prevent="showMenu($event, index)"
+                                @contextmenu.prevent="showSnippetMenu($event, index)"
                             >
                                 <div style="display: flex; align-items: center">
                                     <div
@@ -350,7 +350,7 @@
                                 </div>
                             </div>
                             <ul
-                                v-if="isMenuVisible"
+                                v-if="isSnippetMenuVisible"
                                 :style="{
                                     top: menuTop + 'px',
                                     left: menuLeft + 'px',
@@ -358,8 +358,8 @@
                                     color: theme.foreground
                                 }"
                             >
-                                <li @click="menuAction('edit')">Edit</li>
-                                <li @click="menuAction('delete')">Delete</li>
+                                <li @click="menuSnippetAction('edit')">Edit</li>
+                                <li @click="menuSnippetAction('delete')">Delete</li>
                             </ul>
                         </div>
                     </div>
@@ -392,7 +392,7 @@
                             </div>
                         </div>
                         <div :style="{ height: clientHeight - 180 + 'px', overflow: 'auto' }">
-                            <el-form ref="snippetForm" :model="snippetForm" :rules="rules" label-width="0px">
+                            <el-form ref="snippetForm" :model="snippetForm" :rules="snippetRules" label-width="0px">
                                 <el-form-item prop="name">
                                     <el-input v-model="snippetForm.name" placeholder="Action description"></el-input>
                                 </el-form-item>
@@ -437,7 +437,7 @@
                             </div>
                         </div>
                         <div :style="{ height: clientHeight - 180 + 'px', overflow: 'auto' }">
-                            <el-form ref="snippetForm" :model="snippetForm" :rules="rules" label-width="0px">
+                            <el-form ref="snippetForm" :model="snippetForm" :rules="snippetRules" label-width="0px">
                                 <el-form-item prop="name">
                                     <el-input v-model="snippetForm.name" placeholder="Action description"></el-input>
                                 </el-form-item>
@@ -491,6 +491,46 @@
                 </div>
             </div>
         </div>
+        <el-dialog title="Info" :visible.sync="showAddSession" width="500px">
+            <el-form ref="sessionForm" :model="sessionForm" :rules="sessionRules">
+                <el-form-item label="Host Name(or IP address)" prop="host">
+                    <el-input v-model="sessionForm.host" clearable></el-input>
+                </el-form-item>
+                <el-form-item label="Username" prop="username">
+                    <el-input v-model="sessionForm.username" clearable></el-input>
+                </el-form-item>
+                <el-form-item label="Password" prop="password">
+                    <el-input v-model="sessionForm.password" show-password clearable></el-input>
+                </el-form-item>
+                <el-form-item label="Port" prop="port">
+                    <el-input v-model.number="sessionForm.port"></el-input>
+                </el-form-item>
+            </el-form>
+            <span slot="footer" class="dialog-footer">
+                <el-button @click="showAddSession = false">Cancel</el-button>
+                <el-button type="primary" @click="handleSaveSession">Connect</el-button>
+            </span>
+        </el-dialog>
+        <el-dialog title="Info" :visible.sync="showEditSession" width="500px">
+            <el-form ref="sessionForm" :model="sessionForm" :rules="sessionRules">
+                <el-form-item label="Host Name(or IP address)" prop="host">
+                    <el-input v-model="sessionForm.host" clearable></el-input>
+                </el-form-item>
+                <el-form-item label="Username" prop="username">
+                    <el-input v-model="sessionForm.username" clearable></el-input>
+                </el-form-item>
+                <el-form-item label="Password" prop="password">
+                    <el-input v-model="sessionForm.password" show-password clearable></el-input>
+                </el-form-item>
+                <el-form-item label="Port" prop="port">
+                    <el-input v-model.number="sessionForm.port"></el-input>
+                </el-form-item>
+            </el-form>
+            <span slot="footer" class="dialog-footer">
+                <el-button @click="showEditSession = false">Cancel</el-button>
+                <el-button type="primary" @click="handleUpdateSession">Confirm</el-button>
+            </span>
+        </el-dialog>
     </div>
 </template>
 
@@ -504,19 +544,21 @@ import { WebLinksAddon } from '@xterm/addon-web-links'
 import themes from '@/themes/index'
 import '@xterm/xterm/css/xterm.css'
 import os from 'os'
+import { filesize } from 'filesize'
 const { Client } = require('ssh2')
+var shell = require('shelljs')
+var Mode = require('stat-mode')
 
 export default {
     data() {
         return {
-            classify: 'Sessions',
+            classify: 'Hosts',
             clientWidth: document.documentElement.clientWidth || document.body.clientWidth,
             clientHeight: document.documentElement.clientHeight || document.body.clientHeight,
             mainBackground: '#353951',
             auxBackgroudColor: '#edf1f2',
             activeName: '',
             tabs: {},
-            initActiveName: '',
             theme: {},
             platform: os.platform(),
             settingFlag: true,
@@ -527,19 +569,45 @@ export default {
                 name: '',
                 script: ''
             },
-            rules: {
+            snippetRules: {
                 name: [{ required: true, message: 'Action description', trigger: 'blur' }],
                 script: [{ required: true, message: 'Action Script', trigger: 'blur' }]
             },
             showAddSnippet: false,
             showEditSnippet: false,
             index: -1,
-            isMenuVisible: false,
+            isSnippetMenuVisible: false,
+            isSessionMenuVisible: false,
             menuTop: 0,
-            menuLeft: 0
+            menuLeft: 0,
+            showAddSession: false,
+            sessionForm: {
+                host: '',
+                username: '',
+                password: '',
+                port: 22
+            },
+            sessionRules: {
+                host: [{ required: true, message: 'Host Name(or IP address)', trigger: 'blur' }],
+                username: [{ required: true, message: 'Username', trigger: 'blur' }],
+                password: [{ required: true, message: 'Password', trigger: 'blur' }],
+                port: [
+                    { required: true, message: 'Port', trigger: 'blur' },
+                    { type: 'integer', message: 'Port must be a integer value', trigger: 'blur' },
+                    { type: 'integer', min: 0, max: 65535, message: 'Port Range 0 to 65535', trigger: 'blur' }
+                ]
+            },
+            sessionList: [],
+            showEditSession: false
         }
     },
     mounted() {
+        // console.log(filesize(265318, { standard: 'jedec' }))
+        // shell.ls('-lA', ['/Users/X/Documents']).forEach(function (file) {
+        //     //console.log(file)
+        //     var mode = new Mode(file)
+        //     console.log(mode.toString())
+        // })
         let themeName = localStorage.getItem('theme') || 'Monokai'
         localStorage.setItem('theme', themeName)
         let settingFlag = localStorage.getItem('settingFlag')
@@ -549,25 +617,26 @@ export default {
             this.settingFlag = true
         }
         this.theme = this.themes[themeName]
-        let nodeId = Math.random().toString(36).slice(-6)
-        this.initActiveName = nodeId
-        this.activeName = nodeId
-        let item = {
-            label: 'Terminal',
-            name: nodeId,
-            xterm: null,
-            fitAddon: null,
-            clipboardAddon: null,
-            searchAddon: null,
-            webLinksAddon: null
-        }
-        this.tabs[nodeId] = item
-        this.$nextTick(() => {
-            this.initTerminal(item)
-            if (os.platform() != 'darwin') {
-                window.ipcRenderer.invoke('setTitleBarOverlay', this.theme.background)
-            }
-        })
+        // let nodeId = Math.random().toString(36).slice(-6)
+        // this.initActiveName = nodeId
+        // this.activeName = nodeId
+        // let item = {
+        //     protocol: 'shell',
+        //     label: 'Local Shell',
+        //     name: nodeId,
+        //     xterm: null,
+        //     fitAddon: null,
+        //     clipboardAddon: null,
+        //     searchAddon: null,
+        //     webLinksAddon: null
+        // }
+        // this.tabs[nodeId] = item
+        // this.$nextTick(() => {
+        //     this.initTerminal(item)
+        //     if (os.platform() != 'darwin') {
+        //         window.ipcRenderer.invoke('setTitleBarOverlay', this.theme.background)
+        //     }
+        // })
         window.ipcRenderer.on('terminal', (event, name, data) => {
             let item = this.tabs[name]
             if (item) {
@@ -575,8 +644,144 @@ export default {
             }
         })
         this.querySnippetAll()
+        this.querySessionAll()
     },
     methods: {
+        handleClick() {
+            this.isSnippetMenuVisible = false
+            this.isSessionMenuVisible = false
+        },
+        showSessionMenu(event, index) {
+            this.index = index
+            this.isSessionMenuVisible = true
+            this.menuTop = event.clientY
+            this.menuLeft = event.clientX
+        },
+        menuSessionAction(action) {
+            this.isSnippetMenuVisible = false
+            if (action === 'remove') {
+                let session = this.sessionList[this.index]
+                this.handleDeleteSession(session.id)
+                this.sessionList.splice(this.index, 1)
+            } else if (action === 'edit') {
+                let session = this.sessionList[this.index]
+                this.sessionForm = Object.assign({}, JSON.parse(JSON.stringify(session)))
+                this.showEditSession = true
+                if (this.$refs.sessionForm) {
+                    this.$refs.sessionForm.resetFields()
+                }
+            }
+        },
+        async handleDeleteSession(id) {
+            let sql = 'DELETE FROM session WHERE id = ?'
+            let result = await window.ipcRenderer.invoke('db_delete', sql, [id])
+        },
+        dblclick(item) {
+            let load = this.$loading({
+                lock: true,
+                text: 'Connect...',
+                spinner: 'el-icon-loading',
+                background: 'rgba(0, 0, 0, 0.3)'
+            })
+            const conn = new Client()
+            conn.on('ready', () => {
+                load.close()
+                console.log('Client :: ready')
+
+                this.addTab('ssh', item.host, conn)
+            })
+                .on('close', () => {
+                    console.log('Conn :: close')
+                })
+                .on('error', error => {
+                    this.$message.error(error)
+                    load.close()
+                })
+                .connect({
+                    host: item.host,
+                    port: item.port,
+                    username: item.username,
+                    password: item.password
+                })
+        },
+        handleCommand(command) {
+            if (command === 'shell') {
+                this.addTab('shell')
+            } else if (command === 'ssh') {
+                this.showAddSession = true
+                if (this.$refs.sessionForm) {
+                    this.$refs.sessionForm.resetFields()
+                }
+            }
+        },
+        async handleSaveSession() {
+            this.$refs.sessionForm.validate(valid => {
+                if (valid) {
+                    let load = this.$loading({
+                        lock: true,
+                        text: 'Connect...',
+                        spinner: 'el-icon-loading',
+                        background: 'rgba(0, 0, 0, 0.3)'
+                    })
+                    const conn = new Client()
+                    conn.on('ready', async () => {
+                        load.close()
+                        console.log('Client :: ready')
+                        let sql =
+                            'INSERT INTO session (label, tags, protocol, host, port, username, password, variable ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
+                        let result = await window.ipcRenderer.invoke('db_insert', sql, [
+                            '',
+                            '',
+                            'ssh',
+                            this.sessionForm.host,
+                            this.sessionForm.port,
+                            this.sessionForm.username,
+                            this.sessionForm.password,
+                            '{}'
+                        ])
+                        this.sessionList.unshift({
+                            protocol: 'ssh',
+                            host: this.sessionForm.host,
+                            port: this.sessionForm.port,
+                            username: this.sessionForm.username,
+                            password: this.sessionForm.password,
+                            variable: '{}'
+                        })
+                        this.showAddSession = false
+                        this.addTab('ssh', this.sessionForm.host, conn)
+                    })
+                        .on('close', () => {
+                            console.log('Conn :: close')
+                        })
+                        .on('error', error => {
+                            this.$message.error(error)
+                            load.close()
+                        })
+                        .connect({
+                            host: this.sessionForm.host,
+                            port: this.sessionForm.port,
+                            username: this.sessionForm.username,
+                            password: this.sessionForm.password
+                        })
+                }
+            })
+        },
+        async handleUpdateSession() {
+            this.$refs.sessionForm.validate(async valid => {
+                if (valid) {
+                    let sql = 'UPDATE session SET host = ?, port = ?, username = ?, password = ? WHERE id = ?'
+                    let result = await window.ipcRenderer.invoke('db_update', sql, [
+                        this.sessionForm.host,
+                        this.sessionForm.port,
+                        this.sessionForm.username,
+                        this.sessionForm.password,
+                        this.sessionForm.id
+                    ])
+                    this.$set(this.sessionList, this.index, JSON.parse(JSON.stringify(this.sessionForm)))
+                    this.showEditSession = false
+                }
+            })
+        },
         handleHosts() {
             this.classify = 'Hosts'
             this.$nextTick(() => {
@@ -601,14 +806,14 @@ export default {
                 window.ipcRenderer.invoke('setTitleBarOverlay', this.mainBackground)
             }
         },
-        showMenu(event, index) {
+        showSnippetMenu(event, index) {
             this.index = index
-            this.isMenuVisible = true
+            this.isSnippetMenuVisible = true
             this.menuTop = event.clientY
             this.menuLeft = event.clientX
         },
-        menuAction(action) {
-            this.isMenuVisible = false
+        menuSnippetAction(action) {
+            this.isSnippetMenuVisible = false
             if (action === 'delete') {
                 let snippet = this.snippetList[this.index]
                 this.handleDeleteSnippet(snippet.id)
@@ -693,14 +898,14 @@ export default {
         async handleUpdateSnippet() {
             this.$refs.snippetForm.validate(async valid => {
                 if (valid) {
-                    let sql = 'UPDATE snippet SET name = ?, script = ?, targets =? WHERE id = ?'
+                    let sql = 'UPDATE snippet SET name = ?, script = ?, targets = ? WHERE id = ?'
                     let result = await window.ipcRenderer.invoke('db_update', sql, [
                         this.snippetForm.name,
                         this.snippetForm.script,
                         '',
                         this.snippetForm.id
                     ])
-                    this.$set(this.snippetList, this.index, this.snippetForm)
+                    this.$set(this.snippetList, this.index, JSON.parse(JSON.stringify(this.snippetForm)))
                     this.showEditSnippet = false
                 }
             })
@@ -715,22 +920,30 @@ export default {
                 'select * from snippet order by upodate_time desc'
             )
         },
-        addTab() {
+        async querySessionAll() {
+            this.sessionList = await window.ipcRenderer.invoke(
+                'db_all',
+                'select * from session order  by upodate_time desc'
+            )
+        },
+        addTab(protocol, label, conn) {
             this.classify = 'Sessions'
             let nodeId = Math.random().toString(36).slice(-6)
             let item = {
-                label: 'Terminal',
+                protocol: protocol,
+                label: protocol === 'shell' ? 'Local Shell' : label,
                 name: nodeId,
                 xterm: null,
                 fitAddon: null,
                 clipboardAddon: null,
                 searchAddon: null,
-                webLinksAddon: null
+                webLinksAddon: null,
+                conn: conn
             }
             this.tabs[nodeId] = item
             this.activeName = nodeId
             this.$nextTick(() => {
-                this.initTerminal(item)
+                this.initTerminal(item, conn)
             })
             if (os.platform() != 'darwin') {
                 window.ipcRenderer.invoke('setTitleBarOverlay', this.theme.background)
@@ -741,8 +954,13 @@ export default {
             localStorage.setItem('settingFlag', this.settingFlag)
             for (const key in this.tabs) {
                 this.$nextTick(() => {
-                    this.tabs[key].fitAddon.fit()
-                    window.ipcRenderer.invoke('resize', key, this.tabs[key].xterm.rows, this.tabs[key].xterm.cols)
+                    let item = this.tabs[key]
+                    item.fitAddon.fit()
+                    if (item.protocol === 'shell') {
+                        window.ipcRenderer.invoke('resize', key, item.xterm.rows, item.xterm.cols)
+                    } else if (item.protocol === 'ssh') {
+                        item.stream.setWindow(item.xterm.rows, item.xterm.cols)
+                    }
                 })
             }
         },
@@ -769,37 +987,51 @@ export default {
             })
         },
         removeTab(targetName) {
-            let activeName = this.activeName
-            if (activeName === targetName) {
-                activeName = this.initActiveName
+            let activeName = ''
+            for (let key in this.tabs) {
+                if (key === targetName) {
+                    if (activeName) {
+                        break
+                    } else {
+                        continue
+                    }
+                }
+                activeName = key
             }
-            this.dispose(this.tabs[targetName])
+            let tab = this.tabs[targetName]
+            if (tab) {
+                tab.fitAddon.dispose()
+                tab.clipboardAddon.dispose()
+                tab.searchAddon.dispose()
+                tab.webLinksAddon.dispose()
+                tab.xterm.dispose(this.$refs[tab.name])
+                if (tab.protocol === 'shell') {
+                    window.ipcRenderer.invoke('dispose', tab.name)
+                } else if (tab.protocol === 'ssh') {
+                    tab.stream.close()
+                }
+            }
             this.activeName = activeName
             this.$delete(this.tabs, targetName)
-            // delete this.tabs[targetName]
-            this.$nextTick(() => {
-                let item = this.tabs[this.activeName]
-                item.xterm.options.theme = this.theme
-                item.xterm.focus()
-                let tabsItems = document.querySelectorAll('.el-tabs__item')
-                tabsItems.forEach(item => {
-                    if (item.classList.contains('is-active')) {
-                        item.style.backgroundColor = this.hexToRgb(this.theme.foreground)
-                        item.style.color = this.theme.foreground
-                    } else {
-                        item.style.backgroundColor = 'rgb(121,123,136,0.1)'
-                        item.style.color = '#797b88'
-                    }
+            if (Object.keys(this.tabs).length === 0) {
+                this.classify = 'Hosts'
+            } else {
+                this.$nextTick(() => {
+                    let item = this.tabs[this.activeName]
+                    item.xterm.options.theme = this.theme
+                    item.xterm.focus()
+                    let tabsItems = document.querySelectorAll('.el-tabs__item')
+                    tabsItems.forEach(item => {
+                        if (item.classList.contains('is-active')) {
+                            item.style.backgroundColor = this.hexToRgb(this.theme.foreground)
+                            item.style.color = this.theme.foreground
+                        } else {
+                            item.style.backgroundColor = 'rgb(121,123,136,0.1)'
+                            item.style.color = '#797b88'
+                        }
+                    })
                 })
-            })
-        },
-        dispose(item) {
-            item.fitAddon.dispose()
-            item.clipboardAddon.dispose()
-            item.searchAddon.dispose()
-            item.webLinksAddon.dispose()
-            item.xterm.dispose(this.$refs[item.name])
-            window.ipcRenderer.invoke('dispose', item.name)
+            }
         },
         tabClick(tab) {
             this.classify = 'Sessions'
@@ -824,7 +1056,7 @@ export default {
                 window.ipcRenderer.invoke('setTitleBarOverlay', this.theme.background)
             }
         },
-        initTerminal(item) {
+        initTerminal(item, conn) {
             item.xterm = new Terminal({
                 cursorBlink: this.platform === 'win32' ? true : false,
                 cursorStyle: this.platform === 'win32' ? 'underline' : 'block',
@@ -847,12 +1079,16 @@ export default {
                     this.clientWidth = document.documentElement.clientWidth || document.body.clientWidth
                     this.clientHeight = document.documentElement.clientHeight || document.body.clientHeight
                     item.fitAddon.fit()
-                    window.ipcRenderer.invoke('resize', item.name, item.xterm.rows, item.xterm.cols)
+                    if (item.protocol === 'shell') {
+                        window.ipcRenderer.invoke('resize', item.name, item.xterm.rows, item.xterm.cols)
+                    } else if (item.protocol === 'ssh') {
+                        item.stream.setWindow(item.xterm.rows, item.xterm.cols)
+                    }
                 } catch (e) {
                     this.$message.error(e.message)
                 }
             })
-            item.xterm.onData(data => this.terminalOnData(item.name, data))
+            item.xterm.onData(data => this.terminalOnData(item.protocol, item.name, data))
             item.xterm.onSelectionChange(() => {
                 if (item.xterm.hasSelection()) {
                     navigator.clipboard.writeText(item.xterm.getSelection())
@@ -866,7 +1102,23 @@ export default {
                 })
             })
             item.fitAddon.fit()
-            window.ipcRenderer.invoke('terminal', item.name, item.xterm.rows, item.xterm.cols)
+            if (item.protocol === 'shell') {
+                window.ipcRenderer.invoke('terminal', item.name, item.xterm.rows, item.xterm.cols)
+            } else if (item.protocol === 'ssh') {
+                conn.shell({ cols: item.xterm.cols, rows: item.xterm.rows }, (err, stream) => {
+                    if (err) throw err
+                    item.stream = stream
+                    stream
+                        .on('close', () => {
+                            console.log('Stream :: close')
+                            conn.end()
+                            this.removeTab(item.name)
+                        })
+                        .on('data', data => {
+                            item.xterm.write(data)
+                        })
+                })
+            }
             item.xterm.focus()
             this.$nextTick(() => {
                 let tabsItems = document.querySelectorAll('.el-tabs__item')
@@ -888,8 +1140,13 @@ export default {
             let b = parseInt(hex.substring(4, 6), 16)
             return `rgb(${r}, ${g}, ${b}, 0.15)`
         },
-        terminalOnData(name, data) {
-            window.ipcRenderer.invoke('write', name, data)
+        terminalOnData(protocol, name, data) {
+            if (protocol === 'shell') {
+                window.ipcRenderer.invoke('write', name, data)
+            } else if (protocol === 'ssh') {
+                let item = this.tabs[name]
+                item.stream.write(data)
+            }
         }
     }
 }
@@ -901,6 +1158,11 @@ export default {
     -webkit-app-region: drag;
     display: flex;
     align-items: center;
+}
+
+::v-deep .el-dropdown-menu__item:hover {
+    background-color: rgb(121, 123, 136, 0.1) !important;
+    color: #272727 !important;
 }
 ::v-deep .el-input.is-disabled .el-input__inner {
     background-color: #f3f1f2;
@@ -1087,7 +1349,7 @@ ul {
     padding: 8px;
 }
 li {
-    padding: 8px;
+    padding: 12px;
     cursor: pointer;
     width: 100px;
     font-size: 13px;
