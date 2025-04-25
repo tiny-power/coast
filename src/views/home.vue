@@ -1015,6 +1015,9 @@ export default {
             this.$delete(this.tabs, targetName)
             if (Object.keys(this.tabs).length === 0) {
                 this.classify = 'Hosts'
+                if (os.platform() != 'darwin') {
+                    window.ipcRenderer.invoke('setTitleBarOverlay', '#353951')
+                }
             } else {
                 this.$nextTick(() => {
                     let item = this.tabs[this.activeName]

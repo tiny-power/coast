@@ -14,6 +14,7 @@ protocol.registerSchemesAsPrivileged([
 let mainWindow = null
 let ptyProcessObj = {}
 let db
+let isClose = false
 async function createMainWindow() {
     // 禁止程序多开
     if (!app.requestSingleInstanceLock()) {
@@ -51,11 +52,15 @@ async function createMainWindow() {
     }
 
     mainWindow.on('close', event => {
+        isClose = true
         event.preventDefault()
         handleDbExit()
         for (let key in ptyProcessObj) {
             let ptyProcess = ptyProcessObj[key]
             ptyProcess.kill()
+        }
+        if (Object.keys(ptyProcessObj).length === 0 && isClose) {
+            mainWindow.destroy()
         }
     })
     createDatabaseDir()
@@ -177,6 +182,7 @@ ipcMain.handle('setTitleBarOverlay', async (event, color) => {
 })
 
 ipcMain.handle('dispose', async (event, name) => {
+    isClose = false
     let ptyProcess = ptyProcessObj[name]
     if (ptyProcess) {
         ptyProcess.kill()
@@ -185,9 +191,9 @@ ipcMain.handle('dispose', async (event, name) => {
 
 function ptyProcessExit(code, name) {
     delete ptyProcessObj[name]
-    // if (Object.keys(ptyProcessObj).length === 0) {
-    //     mainWindow.destroy()
-    // }
+    if (Object.keys(ptyProcessObj).length === 0 && isClose) {
+        mainWindow.destroy()
+    }
 }
 
 // 当运行第二个实例时，将会聚焦到win这个窗口
