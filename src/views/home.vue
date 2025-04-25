@@ -110,61 +110,81 @@
                 padding: '30px'
             }"
         >
-            <div style="font-size: 18px; color: #303133; font-weight: 450; margin-bottom: 20px">Hosts</div>
-            <div style="display: grid; grid-gap: 12px; grid-template-columns: repeat(auto-fit, minmax(290px, 350px))">
+            <div v-if="Object.keys(tabs).length != 0">
+                <div style="font-size: 18px; color: #303133; font-weight: 450; margin-bottom: 20px">Hosts</div>
                 <div
-                    style="
-                        background: #fff;
-                        height: 60px;
-                        border-radius: 12px;
-                        display: flex;
-                        align-items: center;
-                        box-sizing: border-box;
-                        cursor: pointer;
-                    "
-                    v-for="(item, index) in sessionList"
-                    :key="index"
-                    @dblclick="dblclick(item)"
-                    @contextmenu.prevent="showSessionMenu($event, index)"
+                    style="display: grid; grid-gap: 12px; grid-template-columns: repeat(auto-fit, minmax(290px, 350px))"
                 >
                     <div
                         style="
-                            background: #014978;
-                            width: 40px;
-                            height: 40px;
-                            border-radius: 8px;
-                            margin: 0px 15px;
+                            background: #fff;
+                            height: 60px;
+                            border-radius: 12px;
                             display: flex;
-                            justify-content: center;
                             align-items: center;
+                            box-sizing: border-box;
+                            cursor: pointer;
                         "
+                        v-for="(item, index) in sessionList"
+                        :key="index"
+                        @dblclick="dblclick(item)"
+                        @contextmenu.prevent="showSessionMenu($event, index)"
                     >
-                        <img :src="require('@/assets/server.png')" width="20px" height="20px" />
+                        <div
+                            style="
+                                background: #014978;
+                                width: 40px;
+                                height: 40px;
+                                border-radius: 8px;
+                                margin: 0px 15px;
+                                display: flex;
+                                justify-content: center;
+                                align-items: center;
+                            "
+                        >
+                            <img :src="require('@/assets/server.png')" width="20px" height="20px" />
+                        </div>
+                        <div>
+                            <div style="font-size: 13px; color: #303133; font-weight: 450">{{ item.host }}</div>
+                            <div style="font-size: 10px; color: #909399">
+                                {{ item.protocol + ', ' + item.username }}
+                            </div>
+                            <div></div>
+                        </div>
                     </div>
-                    <div>
-                        <div style="font-size: 13px; color: #303133; font-weight: 450">{{ item.host }}</div>
-                        <div style="font-size: 10px; color: #909399">{{ item.protocol + ', ' + item.username }}</div>
-                        <div></div>
-                    </div>
+                    <ul
+                        v-if="isSessionMenuVisible"
+                        :style="{
+                            top: menuTop + 'px',
+                            left: menuLeft + 'px',
+                            background: '#f7f9fa',
+                            color: '#303133'
+                        }"
+                    >
+                        <li @click="menuSessionAction('edit')" style="width: 250px">
+                            <i class="el-icon-edit" style="color: #303133; margin-right: 8px; font-size: 16px"></i>
+                            <span>Edit Host</span>
+                        </li>
+                        <li @click="menuSessionAction('remove')" style="width: 250px">
+                            <i
+                                class="el-icon-delete-solid"
+                                style="color: #303133; margin-right: 8px; font-size: 16px"
+                            ></i>
+                            <span>Remove</span>
+                        </li>
+                    </ul>
                 </div>
-                <ul
-                    v-if="isSessionMenuVisible"
-                    :style="{
-                        top: menuTop + 'px',
-                        left: menuLeft + 'px',
-                        background: '#f7f9fa',
-                        color: '#303133'
-                    }"
-                >
-                    <li @click="menuSessionAction('edit')" style="width: 250px">
-                        <i class="el-icon-edit" style="color: #303133; margin-right: 8px; font-size: 16px"></i>
-                        <span>Edit Host</span>
-                    </li>
-                    <li @click="menuSessionAction('remove')" style="width: 250px">
-                        <i class="el-icon-delete-solid" style="color: #303133; margin-right: 8px; font-size: 16px"></i>
-                        <span>Remove</span>
-                    </li>
-                </ul>
+            </div>
+            <div
+                v-else
+                :style="{
+                    height: clientHeight - 110 + 'px',
+                    display: 'flex',
+                    'justify-content': 'center',
+                    'align-items': 'center'
+                }"
+            >
+                <el-empty description="No host available"></el-empty>
             </div>
         </div>
         <div
@@ -176,7 +196,18 @@
                 'box-sizing': 'border-box',
                 padding: '30px'
             }"
-        ></div>
+        >
+            <div
+                :style="{
+                    height: clientHeight - 110 + 'px',
+                    display: 'flex',
+                    'justify-content': 'center',
+                    'align-items': 'center'
+                }"
+            >
+                <el-empty description="Coming"></el-empty>
+            </div>
+        </div>
         <div v-show="classify === 'Sessions'">
             <div style="display: flex">
                 <div v-for="(item, key) in tabs" :key="key" :label="item.label" :name="item.name" style="flex: 1">
