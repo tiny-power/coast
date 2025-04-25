@@ -783,14 +783,7 @@ export default {
                             this.sessionForm.password,
                             '{}'
                         ])
-                        this.sessionList.unshift({
-                            protocol: 'ssh',
-                            host: this.sessionForm.host,
-                            port: this.sessionForm.port,
-                            username: this.sessionForm.username,
-                            password: this.sessionForm.password,
-                            variable: '{}'
-                        })
+                        this.querySessionAll()
                         this.showAddSession = false
                         this.addTab('ssh', this.sessionForm.host, conn)
                     })
@@ -924,10 +917,7 @@ export default {
                         this.snippetForm.script,
                         ''
                     ])
-                    this.snippetList.unshift({
-                        name: this.snippetForm.name,
-                        script: this.snippetForm.script
-                    })
+                    this.querySnippetAll()
                     this.showAddSnippet = false
                 }
             })
