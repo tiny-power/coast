@@ -89,7 +89,7 @@ function createDatabaseDir() {
             )`
         )
     } catch (error) {
-        console.log(error)
+        console.log(error.message)
     }
     try {
         db.exec(
@@ -108,7 +108,7 @@ function createDatabaseDir() {
             )`
         )
     } catch (error) {
-        console.log(error)
+        console.log(error.message)
     }
 }
 

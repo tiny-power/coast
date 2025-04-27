@@ -873,22 +873,32 @@ export default {
         },
         handleRun(script) {
             let item = this.tabs[this.activeName]
-            if (this.platform != 'win32') {
-                window.ipcRenderer.invoke('write', this.activeName, '\x15')
+            if (item.protocol === 'shell') {
+                if (this.platform != 'win32') {
+                    window.ipcRenderer.invoke('write', this.activeName, '\x15')
+                }
+                window.ipcRenderer.invoke(
+                    'write',
+                    this.activeName,
+                    this.platform === 'win32' ? script + '\r\n' : script + '\n'
+                )
+            } else if (item.protocol === 'ssh') {
+                item.stream.write('\x15')
+                item.stream.write(script + '\n')
             }
-            window.ipcRenderer.invoke(
-                'write',
-                this.activeName,
-                this.platform === 'win32' ? script + '\r\n' : script + '\n'
-            )
             item.xterm.focus()
         },
         handlePaste(script) {
             let item = this.tabs[this.activeName]
-            if (this.platform != 'win32') {
-                window.ipcRenderer.invoke('write', this.activeName, '\x15')
+            if (item.protocol === 'shell') {
+                if (this.platform != 'win32') {
+                    window.ipcRenderer.invoke('write', this.activeName, '\x15')
+                }
+                window.ipcRenderer.invoke('write', this.activeName, script)
+            } else if (item.protocol === 'ssh') {
+                item.stream.write('\x15')
+                item.stream.write(script)
             }
-            window.ipcRenderer.invoke('write', this.activeName, script)
             item.xterm.focus()
         },
         handleNewSnippet() {
