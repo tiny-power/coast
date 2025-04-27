@@ -4,6 +4,8 @@ export default {
         foreground: '#f9f9f9',
         background: '#121212',
         cursor: '#fb0007',
+        selection: '#ffffff',
+        cursorAccent: '#121212',
 
         black: '#121212',
         brightBlack: '#838383',
@@ -32,31 +34,33 @@ export default {
     Dracula: {
         type: 'dark',
         foreground: '#f8f8f2',
-        background: '#1e1f29',
-        cursor: '#bbbbbb',
+        background: '#282a36',
+        cursor: '#f8f8f2',
+        selection: '#44475a',
+        cursorAccent: '#282a36',
 
-        black: '#000000',
-        brightBlack: '#555555',
+        black: '#21222c',
+        brightBlack: '#6272a4',
 
         red: '#ff5555',
-        brightRed: '#ff5555',
+        brightRed: '#ff6e6e',
 
         green: '#50fa7b',
-        brightGreen: '#50fa7b',
+        brightGreen: '#69ff94',
 
         yellow: '#f1fa8c',
-        brightYellow: '#f1fa8c',
+        brightYellow: '#ffffa5',
 
         blue: '#bd93f9',
-        brightBlue: '#bd93f9',
+        brightBlue: '#d6acff',
 
         magenta: '#ff79c6',
-        brightMagenta: '#ff79c6',
+        brightMagenta: '#ff92df',
 
         cyan: '#8be9fd',
-        brightCyan: '#8be9fd',
+        brightCyan: '#a4ffff',
 
-        white: '#bbbbbb',
+        white: '#f8f8f2',
         brightWhite: '#ffffff'
     },
     Pro: {
@@ -64,6 +68,8 @@ export default {
         foreground: '#f2f2f2',
         background: '#000000',
         cursor: '#4d4d4d',
+        selection: '#414141',
+        cursorAccent: '#000000',
 
         black: '#000000',
         brightBlack: '#666666',
@@ -94,6 +100,8 @@ export default {
         foreground: '#708284',
         background: '#001e27',
         cursor: '#708284',
+        selection: '#002831',
+        cursorAccent: '#001e27',
 
         black: '#002831',
         brightBlack: '#001e27',
@@ -154,6 +162,8 @@ export default {
         foreground: '#dcdfe4',
         background: '#282c34',
         cursor: '#a3b3cc',
+        selection: '#474e5d',
+        cursorAccent: '#282c34',
 
         black: '#282c34',
         brightBlack: '#282c34',
@@ -184,6 +194,8 @@ export default {
         foreground: '#232322',
         background: '#eaeaea',
         cursor: '#16afca',
+        selection: '#c2c2c2',
+        cursorAccent: '#eaeaea',
 
         black: '#212121',
         brightBlack: '#424242',
@@ -214,6 +226,8 @@ export default {
         foreground: '#e5e5e5',
         background: '#232322',
         cursor: '#16afca',
+        selection: '#dfdfdf',
+        cursorAccent: '#232322',
 
         black: '#212121',
         brightBlack: '#424242',
