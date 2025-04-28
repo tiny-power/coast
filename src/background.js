@@ -1,4 +1,4 @@
-import { app, protocol, BrowserWindow, ipcMain, dialog, shell } from 'electron'
+import { app, protocol, BrowserWindow, ipcMain, screen } from 'electron'
 import { createProtocol } from 'vue-cli-plugin-electron-builder/lib'
 const isDevelopment = process.env.NODE_ENV !== 'production'
 import path from 'path'
@@ -6,6 +6,7 @@ import os from 'os'
 import * as pty from 'node-pty'
 import Database from 'better-sqlite3'
 import fs from 'fs'
+const { exec } = require('child_process')
 
 protocol.registerSchemesAsPrivileged([
     { scheme: 'app', privileges: { secure: true, standard: true, supportFetchAPI: true } }
@@ -16,17 +17,19 @@ let ptyProcessObj = {}
 let db
 let isClose = false
 async function createMainWindow() {
-    // 禁止程序多开
     if (!app.requestSingleInstanceLock()) {
         app.quit()
         return
     }
 
+    const size = screen.getPrimaryDisplay().workAreaSize
+    console.log(`Width: ${size.width}, Height: ${size.height}`)
+
     mainWindow = new BrowserWindow({
         title: 'Coast',
         center: true,
         width: 1200,
-        height: 600,
+        height: size.height,
         minWidth: 720,
         minHeight: 440,
         resizable: true,
@@ -65,6 +68,26 @@ async function createMainWindow() {
         }
     })
     createDatabaseDir()
+}
+
+function getWindowsDrives() {
+    return new Promise((resolve, reject) => {
+        exec('wmic logicaldisk get name', (error, stdout, stderr) => {
+            if (error) {
+                reject(error)
+                return
+            }
+            if (stderr) {
+                reject(stderr)
+                return
+            }
+            const drives = stdout
+                .split('\r\n')
+                .filter(line => line.trim() !== 'Name')
+                .map(line => line.trim())
+            resolve(drives)
+        })
+    })
 }
 
 function createDatabaseDir() {
@@ -120,6 +143,21 @@ function handleDbExit() {
         console.error('Error closing database:', error.message)
     }
 }
+
+ipcMain.handle('getHome', async () => {
+    if (process.platform === 'win32') {
+        getWindowsDrives()
+            .then(drives => {
+                console.log(drives)
+                return app.getPath('desktop')
+            })
+            .catch(error => {
+                console.error('Error fetching drives:', error)
+            })
+    } else {
+        return app.getPath('home')
+    }
+})
 
 ipcMain.handle('db_all', async (event, query, params = []) => {
     const stmt = db.prepare(query)

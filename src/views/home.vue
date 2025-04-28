@@ -145,7 +145,9 @@
                             <img :src="require('@/assets/server.png')" width="20px" height="20px" />
                         </div>
                         <div>
-                            <div style="font-size: 13px; color: #303133; font-weight: 450">{{ item.host }}</div>
+                            <div style="font-size: 13px; color: #303133; font-weight: 450">
+                                {{ item.label || item.host }}
+                            </div>
                             <div style="font-size: 10px; color: #909399">
                                 {{ item.protocol + ', ' + item.username }}
                             </div>
@@ -188,24 +190,221 @@
             </div>
         </div>
         <div
-            v-if="classify === 'SFTP'"
+            v-show="classify === 'SFTP'"
             :style="{
                 background: '#f7f9fa',
                 height: clientHeight - 50 + 'px',
                 overflow: 'auto',
                 'box-sizing': 'border-box',
-                padding: '30px'
+                display: 'flex',
+                'flex-direction': 'column'
             }"
         >
-            <div
-                :style="{
-                    height: clientHeight - 110 + 'px',
-                    display: 'flex',
-                    'justify-content': 'center',
-                    'align-items': 'center'
-                }"
-            >
-                <el-empty description="Coming"></el-empty>
+            <div style="height: 76px; display: flex; justify-content: center; align-items: center">
+                <el-autocomplete
+                    v-model="search"
+                    :fetch-suggestions="querySearch"
+                    placeholder="Search hosts"
+                    @select="handleSelect"
+                    style="min-width: 700px"
+                >
+                    <template slot-scope="{ item }">
+                        {{ item.host }}
+                    </template>
+                </el-autocomplete>
+            </div>
+            <div style="flex: 1; display: grid; grid-template-columns: 1fr 1fr">
+                <div style="display: flex; flex-direction: column">
+                    <div
+                        style="
+                            height: 32px;
+                            display: flex;
+                            justify-content: center;
+                            align-items: center;
+                            border: 1px solid #bdc3c7;
+                        "
+                    >
+                        <div
+                            style="
+                                width: 110px;
+                                text-align: center;
+                                font-size: 14px;
+                                background: #e9edef;
+                                height: 100%;
+                                line-height: 32px;
+                            "
+                        >
+                            Local site:
+                        </div>
+                        <el-autocomplete
+                            v-model="localPath"
+                            :fetch-suggestions="queryLocalSearch"
+                            placeholder=""
+                            @select="handleLocalSelect"
+                            size="small"
+                            style="width: 100%"
+                        >
+                            <template slot-scope="{ item }">
+                                {{ item }}
+                            </template>
+                        </el-autocomplete>
+                    </div>
+                    <div style="flex: 1; background: #fff">
+                        <el-table
+                            :data="localRowData"
+                            :style="{ width: clientWidth / 2 + 'px', overflow: 'auto' }"
+                            :max-height="clientHeight - 360"
+                            @cell-dblclick="localRowDoubleClicked"
+                            border
+                        >
+                            <template slot="empty">
+                                <div :style="{ height: clientHeight - 360 + 'px' }">
+                                    <el-empty description="No Rows To Show"></el-empty>
+                                </div>
+                            </template>
+                            <el-table-column prop="name" label="Name" :show-overflow-tooltip="true">
+                                <template slot-scope="scope">
+                                    <div style="display: flex; align-items: center">
+                                        <img
+                                            :src="require('@/assets/folder.png')"
+                                            width="20px"
+                                            height="20px"
+                                            v-if="scope.row.kind === 'folder' || scope.row.kind === ''"
+                                        />
+                                        <img
+                                            :src="require('@/assets/file.png')"
+                                            width="20px"
+                                            height="20px"
+                                            v-if="scope.row.kind === 'file'"
+                                        />
+                                        <img
+                                            :src="require('@/assets/link.png')"
+                                            width="20px"
+                                            height="20px"
+                                            v-if="scope.row.kind === 'link'"
+                                        />
+                                        <div style="margin-left: 5px">{{ scope.row.name }}</div>
+                                    </div>
+                                </template>
+                            </el-table-column>
+                            <el-table-column prop="size" label="Size" width="90"> </el-table-column>
+                            <el-table-column prop="kind" label="Kind" width="80"> </el-table-column>
+                            <el-table-column prop="modifiedTime" label="Last modified" width="130"> </el-table-column>
+                            <el-table-column prop="permissions" label="Permissions" width="95"> </el-table-column>
+                        </el-table>
+                    </div>
+                </div>
+                <div style="display: flex; flex-direction: column">
+                    <div
+                        style="
+                            height: 32px;
+                            display: flex;
+                            justify-content: center;
+                            align-items: center;
+                            border: 1px solid #bdc3c7;
+                        "
+                    >
+                        <div
+                            style="
+                                width: 110px;
+                                text-align: center;
+                                font-size: 14px;
+                                background: #e9edef;
+                                height: 100%;
+                                line-height: 32px;
+                            "
+                        >
+                            Remote site:
+                        </div>
+                        <el-autocomplete
+                            v-model="remotePath"
+                            :fetch-suggestions="queryRemoteSearch"
+                            placeholder=""
+                            @select="handleRemoteSelect"
+                            size="small"
+                            style="width: 100%"
+                            @change="remotePathChange"
+                        >
+                            <template slot-scope="{ item }">
+                                {{ item }}
+                            </template>
+                        </el-autocomplete>
+                    </div>
+                    <div style="flex: 1; background: #fff">
+                        <el-table
+                            :data="remoteRowData"
+                            :style="{ width: clientWidth / 2 + 'px', overflow: 'auto' }"
+                            :max-height="clientHeight - 360"
+                            @cell-dblclick="remoteRowDoubleClicked"
+                            border
+                        >
+                            <template slot="empty">
+                                <div :style="{ height: clientHeight - 360 + 'px' }">
+                                    <el-empty description="No Rows To Show"></el-empty>
+                                </div>
+                            </template>
+                            <el-table-column prop="name" label="Name" :show-overflow-tooltip="true">
+                                <template slot-scope="scope">
+                                    <div style="display: flex; align-items: center">
+                                        <img
+                                            :src="require('@/assets/folder.png')"
+                                            width="20px"
+                                            height="20px"
+                                            v-if="scope.row.kind === 'folder' || scope.row.kind === ''"
+                                        />
+                                        <img
+                                            :src="require('@/assets/file.png')"
+                                            width="20px"
+                                            height="20px"
+                                            v-if="scope.row.kind === 'file'"
+                                        />
+                                        <img
+                                            :src="require('@/assets/link.png')"
+                                            width="20px"
+                                            height="20px"
+                                            v-if="scope.row.kind === 'link'"
+                                        />
+                                        <div style="margin-left: 5px">{{ scope.row.name }}</div>
+                                    </div>
+                                </template>
+                            </el-table-column>
+                            <el-table-column prop="size" label="Size" width="90"> </el-table-column>
+                            <el-table-column prop="kind" label="Kind" width="80"> </el-table-column>
+                            <el-table-column prop="modifiedTime" label="Last modified" width="130"> </el-table-column>
+                            <el-table-column prop="permissions" label="Permissions" width="95"> </el-table-column>
+                        </el-table>
+                    </div>
+                </div>
+            </div>
+            <div style="height: 200px">
+                <el-tabs type="border-card" v-model="transfers" class="transfers">
+                    <el-tab-pane
+                        :label="queuedFiles === 0 ? 'Queued files' : 'Queued files (' + successfulTransfers + ')'"
+                        name="queuedFiles"
+                    >
+                        <div style="height: 140px"></div>
+                    </el-tab-pane>
+                    <el-tab-pane
+                        :label="
+                            failedTransfers === 0
+                                ? 'Failed transfers'
+                                : 'Failed transfers (' + successfulTransfers + ')'
+                        "
+                        name="failedTransfers"
+                    >
+                        <div style="height: 140px"></div>
+                    </el-tab-pane>
+                    <el-tab-pane
+                        :label="
+                            successfulTransfers === 0
+                                ? 'Successful transfers'
+                                : 'Successful transfers (' + successfulTransfers + ')'
+                        "
+                        name="suceessfulTransfers"
+                    >
+                        <div style="height: 140px"></div>
+                    </el-tab-pane>
+                </el-tabs>
             </div>
         </div>
         <div v-show="classify === 'Sessions'">
@@ -576,6 +775,8 @@ import themes from '@/themes/index'
 import '@xterm/xterm/css/xterm.css'
 import os from 'os'
 import { filesize } from 'filesize'
+const dayjs = require('dayjs')
+const path = require('path')
 const { Client } = require('ssh2')
 var shell = require('shelljs')
 var Mode = require('stat-mode')
@@ -629,16 +830,42 @@ export default {
                 ]
             },
             sessionList: [],
-            showEditSession: false
+            showEditSession: false,
+            columnDefs: [
+                { headerName: 'Name', field: 'name' },
+                { headerName: 'Size', field: 'size' },
+                { headerName: 'Kind', field: 'kind' },
+                { headerName: 'Last modified', field: 'modifiedTime' },
+                { headerName: 'Permissions', field: 'permissions' }
+            ],
+            localRowData: [],
+            remoteRowData: [],
+            gridOptions: {
+                rowSelection: 'multiple',
+                onSelectionChanged: () => {
+                    const selectedData = this.$refs.rightGrid.api.getSelectedRows()
+                    console.log('选中的行数据:', selectedData)
+                }
+            },
+            search: '',
+            localPath: '',
+            remotePath: '',
+            localOptions: [],
+            remoteOptions: ['/', '/root'],
+            transfers: 'queuedFiles',
+            queuedFiles: 0,
+            failedTransfers: 0,
+            successfulTransfers: 0,
+            queuedFilesList: [],
+            failedTransfersList: [],
+            successfulTransfersList: [],
+            conn: null,
+            sftp: null,
+            curLocalPath: '',
+            curRemotePath: ''
         }
     },
     mounted() {
-        // console.log(filesize(265318, { standard: 'jedec' }))
-        // shell.ls('-lA', ['/Users/X/Documents']).forEach(function (file) {
-        //     //console.log(file)
-        //     var mode = new Mode(file)
-        //     console.log(mode.toString())
-        // })
         let themeName = localStorage.getItem('theme') || 'Monokai'
         localStorage.setItem('theme', themeName)
         let settingFlag = localStorage.getItem('settingFlag')
@@ -648,26 +875,6 @@ export default {
             this.settingFlag = true
         }
         this.theme = this.themes[themeName]
-        // let nodeId = Math.random().toString(36).slice(-6)
-        // this.initActiveName = nodeId
-        // this.activeName = nodeId
-        // let item = {
-        //     protocol: 'shell',
-        //     label: 'Local Shell',
-        //     name: nodeId,
-        //     xterm: null,
-        //     fitAddon: null,
-        //     clipboardAddon: null,
-        //     searchAddon: null,
-        //     webLinksAddon: null
-        // }
-        // this.tabs[nodeId] = item
-        // this.$nextTick(() => {
-        //     this.initTerminal(item)
-        //     if (os.platform() != 'darwin') {
-        //         window.ipcRenderer.invoke('setTitleBarOverlay', this.theme.background)
-        //     }
-        // })
         window.ipcRenderer.on('terminal', (event, name, data) => {
             let item = this.tabs[name]
             if (item) {
@@ -689,8 +896,446 @@ export default {
         })
         this.querySnippetAll()
         this.querySessionAll()
+        this.getHome()
     },
     methods: {
+        async getHome() {
+            this.localPath = await window.ipcRenderer.invoke('getHome')
+            this.curLocalPath = this.localPath
+            let localRowData = [
+                {
+                    kind: '',
+                    name: '..'
+                }
+            ]
+            shell.ls('-lA', [this.localPath]).forEach(file => {
+                var mode = new Mode(file)
+                let permissions = mode.toString()
+                let kind = permissions.substring(0, 1)
+                if (kind === '-') {
+                    kind = 'file'
+                } else if (kind === 'd') {
+                    kind = 'folder'
+                } else if (kind === 'p') {
+                    kind = 'FIFO'
+                } else if (kind === 'l') {
+                    kind = 'link'
+                } else if (kind === 'b') {
+                    kind = 'block'
+                } else if (kind === 'c') {
+                    kind = 'character'
+                } else if (kind === 's') {
+                    kind = 'socket'
+                } else {
+                    kind = 'other'
+                }
+                localRowData.push({
+                    name: file.name,
+                    size: kind === 'file' ? filesize(file.size, { standard: 'jedec' }) : '--',
+                    kind: kind,
+                    modifiedTime: dayjs(file.mtimeMs).format('M/D/YY H:m A'),
+                    permissions: permissions
+                })
+            })
+            this.localRowData = localRowData
+        },
+        querySearch(queryString, cb) {
+            var sessions = this.sessionList
+            var results = queryString ? sessions.filter(this.createFilter(queryString)) : sessions
+            cb(results)
+        },
+        createFilter(queryString) {
+            return session => {
+                return session.host.toLowerCase().indexOf(queryString.toLowerCase()) === 0
+            }
+        },
+        queryLocalSearch(queryString, cb) {
+            cb(this.localOptions)
+        },
+        queryRemoteSearch(queryString, cb) {
+            cb(this.remoteOptions)
+        },
+        handleSelect(item) {
+            let load = this.$loading({
+                lock: true,
+                text: 'Connect...',
+                spinner: 'el-icon-loading',
+                background: 'rgba(0, 0, 0, 0.3)'
+            })
+            this.conn = new Client()
+            this.conn
+                .on('ready', () => {
+                    console.log('Client :: ready')
+                    this.conn.sftp((err, sftp) => {
+                        if (err) throw err
+                        this.sftp = sftp
+                        this.remotePath = '/root'
+                        this.curRemotePath = '/root'
+                        this.sftp.readdir(this.curRemotePath, (err, list) => {
+                            if (err) throw err
+                            let remoteRowData = [
+                                {
+                                    kind: '',
+                                    name: '..'
+                                }
+                            ]
+                            for (let i = 0; i < list.length; i++) {
+                                let row = list[i]
+                                // isBlockDevice()
+                                // isCharacterDevice()
+                                // isDirectory()
+                                // isFIFO()
+                                // isFile()
+                                // isSocket()
+                                let kind = row.longname.substring(0, 1)
+                                if (kind === '-') {
+                                    kind = 'file'
+                                } else if (kind === 'd') {
+                                    kind = 'folder'
+                                } else if (kind === 'p') {
+                                    kind = 'FIFO'
+                                } else if (kind === 'l') {
+                                    kind = 'link'
+                                } else if (kind === 'b') {
+                                    kind = 'block'
+                                } else if (kind === 'c') {
+                                    kind = 'character'
+                                } else if (kind === 's') {
+                                    kind = 'socket'
+                                } else {
+                                    kind = 'other'
+                                }
+                                remoteRowData.push({
+                                    name: row.filename,
+                                    size: kind === 'file' ? filesize(row.attrs.size, { standard: 'jedec' }) : '--',
+                                    kind: kind,
+                                    modifiedTime: dayjs.unix(row.attrs.mtime).format('M/D/YY H:m A'),
+                                    permissions: row.longname.substring(0, 11)
+                                })
+                            }
+                            this.remoteRowData = remoteRowData
+                            load.close()
+                        })
+                    })
+                })
+                .on('close', () => {
+                    console.log('Conn :: close')
+                })
+                .on('error', error => {
+                    this.$message.error(error)
+                    load.close()
+                })
+                .connect({
+                    host: item.host,
+                    port: item.port,
+                    username: item.username,
+                    password: item.password
+                })
+        },
+        handleLocalSelect(path) {
+            let localRowData = [
+                {
+                    kind: '',
+                    name: '..'
+                }
+            ]
+            shell.ls('-lA', [path]).forEach(file => {
+                var mode = new Mode(file)
+                let permissions = mode.toString()
+                let kind = permissions.substring(0, 1)
+                if (kind === '-') {
+                    kind = 'file'
+                } else if (kind === 'd') {
+                    kind = 'folder'
+                } else if (kind === 'p') {
+                    kind = 'FIFO'
+                } else if (kind === 'l') {
+                    kind = 'link'
+                } else if (kind === 'b') {
+                    kind = 'block'
+                } else if (kind === 'c') {
+                    kind = 'character'
+                } else if (kind === 's') {
+                    kind = 'socket'
+                } else {
+                    kind = 'other'
+                }
+                localRowData.push({
+                    name: file.name,
+                    size: kind === 'file' ? filesize(file.size, { standard: 'jedec' }) : '--',
+                    kind: kind,
+                    modifiedTime: dayjs(file.mtimeMs).format('M/D/YY H:m A'),
+                    permissions: permissions
+                })
+            })
+            this.localRowData = localRowData
+            this.curLocalPath = path
+            this.localPath = path
+        },
+        handleRemoteSelect(path) {
+            if (this.sftp) {
+                this.sftp.readdir(path, (err, list) => {
+                    if (err) {
+                        return
+                    }
+                    let remoteRowData = [
+                        {
+                            kind: '',
+                            name: '..'
+                        }
+                    ]
+                    for (let i = 0; i < list.length; i++) {
+                        let row = list[i]
+                        let kind = row.longname.substring(0, 1)
+                        if (kind === '-') {
+                            kind = 'file'
+                        } else if (kind === 'd') {
+                            kind = 'folder'
+                        } else if (kind === 'p') {
+                            kind = 'FIFO'
+                        } else if (kind === 'l') {
+                            kind = 'link'
+                        } else if (kind === 'b') {
+                            kind = 'block'
+                        } else if (kind === 'c') {
+                            kind = 'character'
+                        } else if (kind === 's') {
+                            kind = 'socket'
+                        } else {
+                            kind = 'other'
+                        }
+                        remoteRowData.push({
+                            name: row.filename,
+                            size: kind === 'file' ? filesize(row.attrs.size, { standard: 'jedec' }) : '--',
+                            kind: kind,
+                            modifiedTime: dayjs.unix(row.attrs.mtime).format('M/D/YY H:m A'),
+                            permissions: row.longname.substring(0, 11)
+                        })
+                    }
+                    this.remoteRowData = remoteRowData
+                    this.curRemotePath = path
+                    this.remotePath = path
+                })
+            }
+        },
+        localRowDoubleClicked(row, column, cell, event) {
+            if (row.kind === 'folder') {
+                this.curLocalPath = path.join(this.curLocalPath, row.name)
+                this.localPath = path.dirname(path.join(this.curLocalPath, row.name))
+                let localRowData = [
+                    {
+                        kind: '',
+                        name: '..'
+                    }
+                ]
+                shell.ls('-lA', [this.curLocalPath]).forEach(file => {
+                    var mode = new Mode(file)
+                    let permissions = mode.toString()
+                    let kind = permissions.substring(0, 1)
+                    if (kind === '-') {
+                        kind = 'file'
+                    } else if (kind === 'd') {
+                        kind = 'folder'
+                    } else if (kind === 'p') {
+                        kind = 'FIFO'
+                    } else if (kind === 'l') {
+                        kind = 'link'
+                    } else if (kind === 'b') {
+                        kind = 'block'
+                    } else if (kind === 'c') {
+                        kind = 'character'
+                    } else if (kind === 's') {
+                        kind = 'socket'
+                    } else {
+                        kind = 'other'
+                    }
+                    localRowData.push({
+                        name: file.name,
+                        size: kind === 'file' ? filesize(file.size, { standard: 'jedec' }) : '--',
+                        kind: kind,
+                        modifiedTime: dayjs(file.mtimeMs).format('M/D/YY H:m A'),
+                        permissions: permissions
+                    })
+                })
+                this.localRowData = localRowData
+            } else if (row.kind === '') {
+                this.curLocalPath = path.dirname(this.curLocalPath)
+                this.localPath = this.curLocalPath
+                let localRowData = [
+                    {
+                        kind: '',
+                        name: '..'
+                    }
+                ]
+                shell.ls('-lA', [this.curLocalPath]).forEach(file => {
+                    var mode = new Mode(file)
+                    let permissions = mode.toString()
+                    let kind = permissions.substring(0, 1)
+                    if (kind === '-') {
+                        kind = 'file'
+                    } else if (kind === 'd') {
+                        kind = 'folder'
+                    } else if (kind === 'p') {
+                        kind = 'FIFO'
+                    } else if (kind === 'l') {
+                        kind = 'link'
+                    } else if (kind === 'b') {
+                        kind = 'block'
+                    } else if (kind === 'c') {
+                        kind = 'character'
+                    } else if (kind === 's') {
+                        kind = 'socket'
+                    } else {
+                        kind = 'other'
+                    }
+                    localRowData.push({
+                        name: file.name,
+                        size: kind === 'file' ? filesize(file.size, { standard: 'jedec' }) : '--',
+                        kind: kind,
+                        modifiedTime: dayjs(file.mtimeMs).format('M/D/YY H:m A'),
+                        permissions: permissions
+                    })
+                })
+                this.localRowData = localRowData
+            }
+        },
+        remoteRowDoubleClicked(row, column, cell, event) {
+            if (row.kind === 'folder') {
+                this.curRemotePath = path.join(this.curRemotePath, row.name)
+                this.remotePath = path.dirname(path.join(this.curRemotePath, row.name))
+                this.sftp.readdir(this.curRemotePath, (err, list) => {
+                    if (err) {
+                        return
+                    }
+                    let remoteRowData = [
+                        {
+                            kind: '',
+                            name: '..'
+                        }
+                    ]
+                    for (let i = 0; i < list.length; i++) {
+                        let row = list[i]
+                        let kind = row.longname.substring(0, 1)
+                        if (kind === '-') {
+                            kind = 'file'
+                        } else if (kind === 'd') {
+                            kind = 'folder'
+                        } else if (kind === 'p') {
+                            kind = 'FIFO'
+                        } else if (kind === 'l') {
+                            kind = 'link'
+                        } else if (kind === 'b') {
+                            kind = 'block'
+                        } else if (kind === 'c') {
+                            kind = 'character'
+                        } else if (kind === 's') {
+                            kind = 'socket'
+                        } else {
+                            kind = 'other'
+                        }
+                        remoteRowData.push({
+                            name: row.filename,
+                            size: kind === 'file' ? filesize(row.attrs.size, { standard: 'jedec' }) : '--',
+                            kind: kind,
+                            modifiedTime: dayjs.unix(row.attrs.mtime).format('M/D/YY H:m A'),
+                            permissions: row.longname.substring(0, 11)
+                        })
+                    }
+                    this.remoteRowData = remoteRowData
+                })
+            } else if (row.kind === '') {
+                this.curRemotePath = path.dirname(this.curRemotePath)
+                this.remotePath = this.curRemotePath
+                this.sftp.readdir(this.curRemotePath, (err, list) => {
+                    if (err) {
+                        return
+                    }
+                    let remoteRowData = [
+                        {
+                            kind: '',
+                            name: '..'
+                        }
+                    ]
+                    for (let i = 0; i < list.length; i++) {
+                        let row = list[i]
+                        let kind = row.longname.substring(0, 1)
+                        if (kind === '-') {
+                            kind = 'file'
+                        } else if (kind === 'd') {
+                            kind = 'folder'
+                        } else if (kind === 'p') {
+                            kind = 'FIFO'
+                        } else if (kind === 'l') {
+                            kind = 'link'
+                        } else if (kind === 'b') {
+                            kind = 'block'
+                        } else if (kind === 'c') {
+                            kind = 'character'
+                        } else if (kind === 's') {
+                            kind = 'socket'
+                        } else {
+                            kind = 'other'
+                        }
+                        remoteRowData.push({
+                            name: row.filename,
+                            size: kind === 'file' ? filesize(row.attrs.size, { standard: 'jedec' }) : '--',
+                            kind: kind,
+                            modifiedTime: dayjs.unix(row.attrs.mtime).format('M/D/YY H:m A'),
+                            permissions: row.longname.substring(0, 11)
+                        })
+                    }
+                    this.remoteRowData = remoteRowData
+                })
+            }
+        },
+        remotePathChange() {
+            if (this.sftp) {
+                this.sftp.readdir(this.remotePath, (err, list) => {
+                    if (err) {
+                        return
+                    }
+                    let remoteRowData = [
+                        {
+                            kind: '',
+                            name: '..'
+                        }
+                    ]
+                    for (let i = 0; i < list.length; i++) {
+                        let row = list[i]
+                        let kind = row.longname.substring(0, 1)
+                        if (kind === '-') {
+                            kind = 'file'
+                        } else if (kind === 'd') {
+                            kind = 'folder'
+                        } else if (kind === 'p') {
+                            kind = 'FIFO'
+                        } else if (kind === 'l') {
+                            kind = 'link'
+                        } else if (kind === 'b') {
+                            kind = 'block'
+                        } else if (kind === 'c') {
+                            kind = 'character'
+                        } else if (kind === 's') {
+                            kind = 'socket'
+                        } else {
+                            kind = 'other'
+                        }
+                        remoteRowData.push({
+                            name: row.filename,
+                            size: kind === 'file' ? filesize(row.attrs.size, { standard: 'jedec' }) : '--',
+                            kind: kind,
+                            modifiedTime: dayjs.unix(row.attrs.mtime).format('M/D/YY H:m A'),
+                            permissions: row.longname.substring(0, 11)
+                        })
+                    }
+                    this.remoteRowData = remoteRowData
+                    this.curRemotePath = this.remotePath
+                    if (!this.remoteOptions.includes(this.remotePath)) {
+                        this.remoteOptions.push(this.remotePath)
+                    }
+                })
+            }
+        },
         handleClick() {
             this.isSnippetMenuVisible = false
             this.isSessionMenuVisible = false
@@ -1283,7 +1928,7 @@ export default {
     background-color: #fff;
 }
 ::v-deep .el-table__cell {
-    padding: 8px 0;
+    padding: 2px 0;
 }
 ::v-deep .el-checkbox__input.is-checked .el-checkbox__inner {
     background-color: #272727;
@@ -1404,5 +2049,36 @@ li {
 li:hover {
     border-radius: 8px;
     background-color: rgb(121, 123, 136, 0.1);
+}
+::v-deep .ag-cell-focus,
+.ag-cell-no-focus {
+    border: none !important;
+}
+::v-deep .no-border.ag-cell:focus {
+    border: none !important;
+    outline: none;
+}
+::v-deep .transfers .el-tabs__item.is-active {
+    color: #272727 !important;
+    background: #fff !important;
+}
+::v-deep .transfers .el-tabs__item:not(.is-disabled):hover {
+    color: #272727 !important;
+}
+::v-deep .transfers .el-tabs__item {
+    background-color: #e4e7ed !important;
+    color: #909399 !important;
+    border-radius: 0px !important;
+    margin-left: 0px !important;
+}
+::v-deep .el-table th {
+    height: 34px;
+    font-size: 12px !important;
+}
+::v-deep .el-table td {
+    font-size: 12px !important;
+}
+::v-deep .el-table thead th {
+    background: #f5f7f7 !important;
 }
 </style>
