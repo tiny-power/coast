@@ -256,6 +256,7 @@
                                 :style="{ width: clientWidth / 2 + 'px', overflow: 'auto' }"
                                 :max-height="clientHeight - 360"
                                 @cell-dblclick="localRowDoubleClicked"
+                                @row-contextmenu="localRowContextmenu"
                                 border
                             >
                                 <template slot="empty">
@@ -294,6 +295,38 @@
                                 </el-table-column>
                                 <el-table-column prop="permissions" label="Permissions" width="95"> </el-table-column>
                             </el-table>
+                            <ul
+                                v-if="isLocalMenuVisible"
+                                :style="{
+                                    top: menuTop + 'px',
+                                    left: menuLeft + 'px',
+                                    background: '#f7f9fa',
+                                    color: '#303133'
+                                }"
+                            >
+                                <li
+                                    @click="menuLocalAction('upload')"
+                                    style="width: 250px"
+                                    v-if="remoteRowData.length != 0"
+                                >
+                                    <span>Upload</span>
+                                </li>
+                                <li @click="menuLocalAction('Create directory')" style="width: 250px">
+                                    <span>Create directory</span>
+                                </li>
+                                <li @click="menuLocalAction('Create directory and enter it')" style="width: 250px">
+                                    <span>Create directory and enter it</span>
+                                </li>
+                                <li @click="menuLocalAction('refresh')" style="width: 250px">
+                                    <span>Refresh</span>
+                                </li>
+                                <li @click="menuLocalAction('delete')" style="width: 250px">
+                                    <span>Delete</span>
+                                </li>
+                                <li @click="menuLocalAction('rename')" style="width: 250px">
+                                    <span>Rename</span>
+                                </li>
+                            </ul>
                         </div>
                     </div>
                     <div style="display: flex; flex-direction: column">
@@ -338,6 +371,7 @@
                                 :style="{ width: clientWidth / 2 + 'px', overflow: 'auto' }"
                                 :max-height="clientHeight - 360"
                                 @cell-dblclick="remoteRowDoubleClicked"
+                                @row-contextmenu="remoteRowContextmenu"
                                 border
                             >
                                 <template slot="empty">
@@ -376,6 +410,37 @@
                                 </el-table-column>
                                 <el-table-column prop="permissions" label="Permissions" width="95"> </el-table-column>
                             </el-table>
+                            <ul
+                                v-if="isRemoteMenuVisible"
+                                :style="{
+                                    top: menuTop + 'px',
+                                    left: menuLeft + 'px',
+                                    background: '#f7f9fa',
+                                    color: '#303133'
+                                }"
+                            >
+                                <li @click="menuRemoteAction('download')" style="width: 250px">
+                                    <span>Download</span>
+                                </li>
+                                <li @click="menuRemoteAction('Create directory')" style="width: 250px">
+                                    <span>Create directory</span>
+                                </li>
+                                <li @click="menuRemoteAction('Create directory and enter it')" style="width: 250px">
+                                    <span>Create directory and enter it</span>
+                                </li>
+                                <li @click="menuRemoteAction('refresh')" style="width: 250px">
+                                    <span>Refresh</span>
+                                </li>
+                                <li @click="menuRemoteAction('delete')" style="width: 250px">
+                                    <span>Delete</span>
+                                </li>
+                                <li @click="menuRemoteAction('rename')" style="width: 250px">
+                                    <span>Rename</span>
+                                </li>
+                                <li @click="menuRemoteAction('File permissions...')" style="width: 250px">
+                                    <span>File permissions...</span>
+                                </li>
+                            </ul>
                         </div>
                     </div>
                 </div>
@@ -867,7 +932,10 @@ export default {
             conn: null,
             sftp: null,
             curLocalPath: '',
-            curRemotePath: ''
+            curRemotePath: '',
+            isLocalMenuVisible: false,
+            isRemoteMenuVisible: false,
+            selectedFileName: ''
         }
     },
     mounted() {
@@ -904,7 +972,139 @@ export default {
         this.getHome()
     },
     methods: {
-        getDir(directoryPath) {
+        async menuLocalAction(action) {
+            if (action === 'upload') {
+                const localFile = path.join(this.curLocalPath, this.selectedFileName)
+                const remoteFile = path.join(this.curRemotePath, path.basename(localFile))
+                this.sftp.fastPut(
+                    localFile,
+                    remoteFile,
+                    {
+                        step: (total_transferred, chunk, total) => {
+                            console.log(total_transferred, chunk, total)
+                        }
+                    },
+                    err => {
+                        if (err) {
+                            console.error('Upload Error:', err)
+                        } else {
+                            if (this.sftp) {
+                                this.sftp.readdir(this.curRemotePath, (err, list) => {
+                                    if (err) {
+                                        return
+                                    }
+                                    let remoteRowData = [
+                                        {
+                                            kind: '',
+                                            name: '..'
+                                        }
+                                    ]
+                                    for (let i = 0; i < list.length; i++) {
+                                        let row = list[i]
+                                        let kind = row.longname.substring(0, 1)
+                                        if (kind === '-') {
+                                            kind = 'file'
+                                        } else if (kind === 'd') {
+                                            kind = 'folder'
+                                        } else if (kind === 'p') {
+                                            kind = 'FIFO'
+                                        } else if (kind === 'l') {
+                                            kind = 'link'
+                                        } else if (kind === 'b') {
+                                            kind = 'block'
+                                        } else if (kind === 'c') {
+                                            kind = 'character'
+                                        } else if (kind === 's') {
+                                            kind = 'socket'
+                                        } else {
+                                            kind = 'other'
+                                        }
+                                        remoteRowData.push({
+                                            name: row.filename,
+                                            size:
+                                                kind === 'file'
+                                                    ? filesize(row.attrs.size, { standard: 'jedec' })
+                                                    : '--',
+                                            kind: kind,
+                                            modifiedTime: dayjs.unix(row.attrs.mtime).format('M/D/YY H:m A'),
+                                            permissions: row.longname.substring(0, 11)
+                                        })
+                                    }
+                                    this.remoteRowData = remoteRowData
+                                })
+                            }
+                        }
+                    }
+                )
+            } else if (action === 'delete') {
+                // try {
+                //     await fs.rm(path.join(this.curLocalPath, this.selectedFileName), { recursive: true, force: true  })
+                //     console.log('Delete Success')
+                // } catch (error) {
+                //     console.error('Delete Error:', error)
+                // }
+                try {
+                    fs.unlinkSync(path.join(this.curLocalPath, this.selectedFileName))
+                    let localRowData = this.getLocalDir(this.curLocalPath)
+                    if (localRowData.length != 0) {
+                        this.localRowData = localRowData
+                    }
+                    console.log('Delete Success')
+                } catch (err) {
+                    console.error('Delete Error:', error)
+                }
+            } else if (action === 'rename') {
+            }
+        },
+        menuRemoteAction(action) {
+            if (action === 'download') {
+                const remoteFile = path.join(this.curRemotePath, this.selectedFileName)
+                const localFile = path.join(this.curLocalPath, path.basename(remoteFile))
+                this.sftp.fastGet(
+                    remoteFile,
+                    localFile,
+                    {
+                        step: (total_transferred, chunk, total) => {
+                            console.log(total_transferred, chunk, total)
+                        }
+                    },
+                    err => {
+                        if (err) {
+                            console.error('Download Error:', err)
+                        } else {
+                            let localRowData = this.getLocalDir(this.curLocalPath)
+                            if (localRowData.length != 0) {
+                                this.localRowData = localRowData
+                            }
+                        }
+                    }
+                )
+            } else if (action === 'delete') {
+                this.sftp.rmdir(path.join(this.curRemotePath, this.selectedFileName), err => {
+                    if (err) {
+                        console.error('Delete Error:', err)
+                    } else {
+                        console.log('Delete Success')
+                    }
+                })
+            } else if (action === 'rename') {
+            }
+        },
+        localRowContextmenu(row, column, event) {
+            event.preventDefault()
+            this.selectedFileName = row.name
+            this.isLocalMenuVisible = true
+            this.menuTop = event.clientY
+            this.menuLeft = event.clientX
+        },
+        remoteRowContextmenu(row, column, event) {
+            event.preventDefault()
+            this.selectedFileName = row.name
+            this.isRemoteMenuVisible = true
+            this.menuTop = event.clientY
+            this.menuLeft = event.clientX
+        },
+        getLocalDir(directoryPath) {
             let result = [
                 {
                     kind: '',
@@ -969,7 +1169,6 @@ export default {
                     name: '..'
                 }
             ]
-            this.getDir(this.localPath)
             shell.ls('-lA', [this.localPath]).forEach(file => {
                 var mode = new Mode(file)
                 let permissions = mode.toString()
@@ -1095,15 +1294,15 @@ export default {
                 })
         },
         handleLocalSelect(selectPath) {
-            let localRowData = this.getDir(selectPath)
+            let localRowData = this.getLocalDir(selectPath)
             if (localRowData.length != 0) {
                 this.localRowData = localRowData
                 this.curLocalPath = selectPath
-                this.localPath = pselectPathath
+                this.localPath = selectPath
             }
         },
         localPathChange() {
-            let localRowData = this.getDir(this.localPath)
+            let localRowData = this.getLocalDir(this.localPath)
             if (localRowData.length != 0) {
                 this.localRowData = localRowData
                 this.curLocalPath = this.localPath
@@ -1379,6 +1578,8 @@ export default {
         handleClick() {
             this.isSnippetMenuVisible = false
             this.isSessionMenuVisible = false
+            this.isLocalMenuVisible = false
+            this.isRemoteMenuVisible = false
         },
         showSessionMenu(event, index) {
             this.index = index
