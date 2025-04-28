@@ -29,7 +29,7 @@ async function createMainWindow() {
         title: 'Coast',
         center: true,
         width: 1200,
-        height: size.height,
+        height: process.platform === 'win32' ? 600 : size.height,
         minWidth: 720,
         minHeight: 440,
         resizable: true,
@@ -146,14 +146,9 @@ function handleDbExit() {
 
 ipcMain.handle('getHome', async () => {
     if (process.platform === 'win32') {
-        getWindowsDrives()
-            .then(drives => {
-                console.log(drives)
-                return app.getPath('desktop')
-            })
-            .catch(error => {
-                console.error('Error fetching drives:', error)
-            })
+        let drives = getWindowsDrives()
+        console.log(drives)
+        return app.getPath('desktop')
     } else {
         return app.getPath('home')
     }

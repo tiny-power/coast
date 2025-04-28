@@ -289,7 +289,7 @@
                             </el-table-column>
                             <el-table-column prop="size" label="Size" width="90"> </el-table-column>
                             <el-table-column prop="kind" label="Kind" width="80"> </el-table-column>
-                            <el-table-column prop="modifiedTime" label="Last modified" width="130"> </el-table-column>
+                            <el-table-column prop="modifiedTime" label="Last modified" width="132"> </el-table-column>
                             <el-table-column prop="permissions" label="Permissions" width="95"> </el-table-column>
                         </el-table>
                     </div>
@@ -370,7 +370,7 @@
                             </el-table-column>
                             <el-table-column prop="size" label="Size" width="90"> </el-table-column>
                             <el-table-column prop="kind" label="Kind" width="80"> </el-table-column>
-                            <el-table-column prop="modifiedTime" label="Last modified" width="130"> </el-table-column>
+                            <el-table-column prop="modifiedTime" label="Last modified" width="132"> </el-table-column>
                             <el-table-column prop="permissions" label="Permissions" width="95"> </el-table-column>
                         </el-table>
                     </div>
