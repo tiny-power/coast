@@ -900,7 +900,13 @@ export default {
     },
     methods: {
         async getHome() {
-            this.localPath = await window.ipcRenderer.invoke('getHome')
+            if (os.platform() === 'win32') {
+                let drives = await window.ipcRenderer.invoke('getHome')
+                this.localPath = drives[0]
+                this.localOptions = drives
+            } else {
+                this.localPath = await window.ipcRenderer.invoke('getHome')
+            }
             this.curLocalPath = this.localPath
             let localRowData = [
                 {

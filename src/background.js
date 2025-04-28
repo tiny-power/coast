@@ -154,8 +154,7 @@ ipcMain.handle('getHome', async () => {
                 drives.push(windowsDrives[i])
             }
         }
-        console.log(app.getPath('home'))
-        return app.getPath('desktop')
+        return drives
     } else {
         return app.getPath('home')
     }
