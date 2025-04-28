@@ -29,7 +29,7 @@ async function createMainWindow() {
         title: 'Coast',
         center: true,
         width: 1200,
-        height: process.platform === 'win32' ? 600 : size.height,
+        height: process.platform === 'win32' ? 750 : size.height,
         minWidth: 720,
         minHeight: 440,
         resizable: true,

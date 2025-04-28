@@ -189,222 +189,225 @@
                 <el-empty description="No host available"></el-empty>
             </div>
         </div>
-        <div
-            v-show="classify === 'SFTP'"
-            :style="{
-                background: '#f7f9fa',
-                height: clientHeight - 50 + 'px',
-                overflow: 'auto',
-                'box-sizing': 'border-box',
-                display: 'flex',
-                'flex-direction': 'column'
-            }"
-        >
-            <div style="height: 76px; display: flex; justify-content: center; align-items: center">
-                <el-autocomplete
-                    v-model="search"
-                    :fetch-suggestions="querySearch"
-                    placeholder="Search hosts"
-                    @select="handleSelect"
-                    style="min-width: 700px"
-                >
-                    <template slot-scope="{ item }">
-                        {{ item.host }}
-                    </template>
-                </el-autocomplete>
-            </div>
-            <div style="flex: 1; display: grid; grid-template-columns: 1fr 1fr">
-                <div style="display: flex; flex-direction: column">
-                    <div
-                        style="
-                            height: 32px;
-                            display: flex;
-                            justify-content: center;
-                            align-items: center;
-                            border: 1px solid #bdc3c7;
-                        "
+        <div v-show="classify === 'SFTP'">
+            <div
+                :style="{
+                    background: '#f7f9fa',
+                    height: clientHeight - 50 + 'px',
+                    overflow: 'auto',
+                    'box-sizing': 'border-box',
+                    display: 'flex',
+                    'flex-direction': 'column'
+                }"
+            >
+                <div style="height: 76px; display: flex; justify-content: center; align-items: center">
+                    <el-autocomplete
+                        v-model="search"
+                        :fetch-suggestions="querySearch"
+                        placeholder="Search hosts"
+                        @select="handleSelect"
+                        style="min-width: 700px"
                     >
+                        <template slot-scope="{ item }">
+                            {{ item.host }}
+                        </template>
+                    </el-autocomplete>
+                </div>
+                <div style="flex: 1; display: grid; grid-template-columns: 1fr 1fr">
+                    <div style="display: flex; flex-direction: column">
                         <div
                             style="
-                                width: 110px;
-                                text-align: center;
-                                font-size: 14px;
-                                background: #e9edef;
-                                height: 100%;
-                                line-height: 32px;
+                                height: 32px;
+                                display: flex;
+                                justify-content: center;
+                                align-items: center;
+                                border: 1px solid #bdc3c7;
                             "
                         >
-                            Local site:
+                            <div
+                                style="
+                                    width: 110px;
+                                    text-align: center;
+                                    font-size: 14px;
+                                    background: #e9edef;
+                                    height: 100%;
+                                    line-height: 32px;
+                                "
+                            >
+                                Local site:
+                            </div>
+                            <el-autocomplete
+                                v-model="localPath"
+                                :fetch-suggestions="queryLocalSearch"
+                                placeholder=""
+                                @select="handleLocalSelect"
+                                size="small"
+                                style="width: 100%"
+                            >
+                                <template slot-scope="{ item }">
+                                    {{ item }}
+                                </template>
+                            </el-autocomplete>
                         </div>
-                        <el-autocomplete
-                            v-model="localPath"
-                            :fetch-suggestions="queryLocalSearch"
-                            placeholder=""
-                            @select="handleLocalSelect"
-                            size="small"
-                            style="width: 100%"
-                        >
-                            <template slot-scope="{ item }">
-                                {{ item }}
-                            </template>
-                        </el-autocomplete>
-                    </div>
-                    <div style="flex: 1; background: #fff">
-                        <el-table
-                            :data="localRowData"
-                            :style="{ width: clientWidth / 2 + 'px', overflow: 'auto' }"
-                            :max-height="clientHeight - 360"
-                            @cell-dblclick="localRowDoubleClicked"
-                            border
-                        >
-                            <template slot="empty">
-                                <div :style="{ height: clientHeight - 360 + 'px' }">
-                                    <el-empty description="No Rows To Show"></el-empty>
-                                </div>
-                            </template>
-                            <el-table-column prop="name" label="Name" :show-overflow-tooltip="true">
-                                <template slot-scope="scope">
-                                    <div style="display: flex; align-items: center">
-                                        <img
-                                            :src="require('@/assets/folder.png')"
-                                            width="20px"
-                                            height="20px"
-                                            v-if="scope.row.kind === 'folder' || scope.row.kind === ''"
-                                        />
-                                        <img
-                                            :src="require('@/assets/file.png')"
-                                            width="20px"
-                                            height="20px"
-                                            v-if="scope.row.kind === 'file'"
-                                        />
-                                        <img
-                                            :src="require('@/assets/link.png')"
-                                            width="20px"
-                                            height="20px"
-                                            v-if="scope.row.kind === 'link'"
-                                        />
-                                        <div style="margin-left: 5px">{{ scope.row.name }}</div>
+                        <div style="flex: 1; background: #fff">
+                            <el-table
+                                :data="localRowData"
+                                :style="{ width: clientWidth / 2 + 'px', overflow: 'auto' }"
+                                :max-height="clientHeight - 360"
+                                @cell-dblclick="localRowDoubleClicked"
+                                border
+                            >
+                                <template slot="empty">
+                                    <div :style="{ height: clientHeight - 360 + 'px' }">
+                                        <el-empty description="No Rows To Show"></el-empty>
                                     </div>
                                 </template>
-                            </el-table-column>
-                            <el-table-column prop="size" label="Size" width="90"> </el-table-column>
-                            <el-table-column prop="kind" label="Kind" width="80"> </el-table-column>
-                            <el-table-column prop="modifiedTime" label="Last modified" width="132"> </el-table-column>
-                            <el-table-column prop="permissions" label="Permissions" width="95"> </el-table-column>
-                        </el-table>
+                                <el-table-column prop="name" label="Name" :show-overflow-tooltip="true">
+                                    <template slot-scope="scope">
+                                        <div style="display: flex; align-items: center">
+                                            <img
+                                                :src="require('@/assets/folder.png')"
+                                                width="20px"
+                                                height="20px"
+                                                v-if="scope.row.kind === 'folder' || scope.row.kind === ''"
+                                            />
+                                            <img
+                                                :src="require('@/assets/file.png')"
+                                                width="20px"
+                                                height="20px"
+                                                v-if="scope.row.kind === 'file'"
+                                            />
+                                            <img
+                                                :src="require('@/assets/link.png')"
+                                                width="20px"
+                                                height="20px"
+                                                v-if="scope.row.kind === 'link'"
+                                            />
+                                            <div style="margin-left: 5px">{{ scope.row.name }}</div>
+                                        </div>
+                                    </template>
+                                </el-table-column>
+                                <el-table-column prop="size" label="Size" width="90"> </el-table-column>
+                                <el-table-column prop="kind" label="Kind" width="80"> </el-table-column>
+                                <el-table-column prop="modifiedTime" label="Last modified" width="132">
+                                </el-table-column>
+                                <el-table-column prop="permissions" label="Permissions" width="95"> </el-table-column>
+                            </el-table>
+                        </div>
                     </div>
-                </div>
-                <div style="display: flex; flex-direction: column">
-                    <div
-                        style="
-                            height: 32px;
-                            display: flex;
-                            justify-content: center;
-                            align-items: center;
-                            border: 1px solid #bdc3c7;
-                        "
-                    >
+                    <div style="display: flex; flex-direction: column">
                         <div
                             style="
-                                width: 110px;
-                                text-align: center;
-                                font-size: 14px;
-                                background: #e9edef;
-                                height: 100%;
-                                line-height: 32px;
+                                height: 32px;
+                                display: flex;
+                                justify-content: center;
+                                align-items: center;
+                                border: 1px solid #bdc3c7;
                             "
                         >
-                            Remote site:
+                            <div
+                                style="
+                                    width: 110px;
+                                    text-align: center;
+                                    font-size: 14px;
+                                    background: #e9edef;
+                                    height: 100%;
+                                    line-height: 32px;
+                                "
+                            >
+                                Remote site:
+                            </div>
+                            <el-autocomplete
+                                v-model="remotePath"
+                                :fetch-suggestions="queryRemoteSearch"
+                                placeholder=""
+                                @select="handleRemoteSelect"
+                                size="small"
+                                style="width: 100%"
+                                @change="remotePathChange"
+                            >
+                                <template slot-scope="{ item }">
+                                    {{ item }}
+                                </template>
+                            </el-autocomplete>
                         </div>
-                        <el-autocomplete
-                            v-model="remotePath"
-                            :fetch-suggestions="queryRemoteSearch"
-                            placeholder=""
-                            @select="handleRemoteSelect"
-                            size="small"
-                            style="width: 100%"
-                            @change="remotePathChange"
-                        >
-                            <template slot-scope="{ item }">
-                                {{ item }}
-                            </template>
-                        </el-autocomplete>
-                    </div>
-                    <div style="flex: 1; background: #fff">
-                        <el-table
-                            :data="remoteRowData"
-                            :style="{ width: clientWidth / 2 + 'px', overflow: 'auto' }"
-                            :max-height="clientHeight - 360"
-                            @cell-dblclick="remoteRowDoubleClicked"
-                            border
-                        >
-                            <template slot="empty">
-                                <div :style="{ height: clientHeight - 360 + 'px' }">
-                                    <el-empty description="No Rows To Show"></el-empty>
-                                </div>
-                            </template>
-                            <el-table-column prop="name" label="Name" :show-overflow-tooltip="true">
-                                <template slot-scope="scope">
-                                    <div style="display: flex; align-items: center">
-                                        <img
-                                            :src="require('@/assets/folder.png')"
-                                            width="20px"
-                                            height="20px"
-                                            v-if="scope.row.kind === 'folder' || scope.row.kind === ''"
-                                        />
-                                        <img
-                                            :src="require('@/assets/file.png')"
-                                            width="20px"
-                                            height="20px"
-                                            v-if="scope.row.kind === 'file'"
-                                        />
-                                        <img
-                                            :src="require('@/assets/link.png')"
-                                            width="20px"
-                                            height="20px"
-                                            v-if="scope.row.kind === 'link'"
-                                        />
-                                        <div style="margin-left: 5px">{{ scope.row.name }}</div>
+                        <div style="flex: 1; background: #fff">
+                            <el-table
+                                :data="remoteRowData"
+                                :style="{ width: clientWidth / 2 + 'px', overflow: 'auto' }"
+                                :max-height="clientHeight - 360"
+                                @cell-dblclick="remoteRowDoubleClicked"
+                                border
+                            >
+                                <template slot="empty">
+                                    <div :style="{ height: clientHeight - 360 + 'px' }">
+                                        <el-empty description="No Rows To Show"></el-empty>
                                     </div>
                                 </template>
-                            </el-table-column>
-                            <el-table-column prop="size" label="Size" width="90"> </el-table-column>
-                            <el-table-column prop="kind" label="Kind" width="80"> </el-table-column>
-                            <el-table-column prop="modifiedTime" label="Last modified" width="132"> </el-table-column>
-                            <el-table-column prop="permissions" label="Permissions" width="95"> </el-table-column>
-                        </el-table>
+                                <el-table-column prop="name" label="Name" :show-overflow-tooltip="true">
+                                    <template slot-scope="scope">
+                                        <div style="display: flex; align-items: center">
+                                            <img
+                                                :src="require('@/assets/folder.png')"
+                                                width="20px"
+                                                height="20px"
+                                                v-if="scope.row.kind === 'folder' || scope.row.kind === ''"
+                                            />
+                                            <img
+                                                :src="require('@/assets/file.png')"
+                                                width="20px"
+                                                height="20px"
+                                                v-if="scope.row.kind === 'file'"
+                                            />
+                                            <img
+                                                :src="require('@/assets/link.png')"
+                                                width="20px"
+                                                height="20px"
+                                                v-if="scope.row.kind === 'link'"
+                                            />
+                                            <div style="margin-left: 5px">{{ scope.row.name }}</div>
+                                        </div>
+                                    </template>
+                                </el-table-column>
+                                <el-table-column prop="size" label="Size" width="90"> </el-table-column>
+                                <el-table-column prop="kind" label="Kind" width="80"> </el-table-column>
+                                <el-table-column prop="modifiedTime" label="Last modified" width="132">
+                                </el-table-column>
+                                <el-table-column prop="permissions" label="Permissions" width="95"> </el-table-column>
+                            </el-table>
+                        </div>
                     </div>
                 </div>
-            </div>
-            <div style="height: 200px">
-                <el-tabs type="border-card" v-model="transfers" class="transfers">
-                    <el-tab-pane
-                        :label="queuedFiles === 0 ? 'Queued files' : 'Queued files (' + successfulTransfers + ')'"
-                        name="queuedFiles"
-                    >
-                        <div style="height: 140px"></div>
-                    </el-tab-pane>
-                    <el-tab-pane
-                        :label="
-                            failedTransfers === 0
-                                ? 'Failed transfers'
-                                : 'Failed transfers (' + successfulTransfers + ')'
-                        "
-                        name="failedTransfers"
-                    >
-                        <div style="height: 140px"></div>
-                    </el-tab-pane>
-                    <el-tab-pane
-                        :label="
-                            successfulTransfers === 0
-                                ? 'Successful transfers'
-                                : 'Successful transfers (' + successfulTransfers + ')'
-                        "
-                        name="suceessfulTransfers"
-                    >
-                        <div style="height: 140px"></div>
-                    </el-tab-pane>
-                </el-tabs>
+                <div style="height: 200px">
+                    <el-tabs type="border-card" v-model="transfers" class="transfers">
+                        <el-tab-pane
+                            :label="queuedFiles === 0 ? 'Queued files' : 'Queued files (' + successfulTransfers + ')'"
+                            name="queuedFiles"
+                        >
+                            <div style="height: 140px"></div>
+                        </el-tab-pane>
+                        <el-tab-pane
+                            :label="
+                                failedTransfers === 0
+                                    ? 'Failed transfers'
+                                    : 'Failed transfers (' + successfulTransfers + ')'
+                            "
+                            name="failedTransfers"
+                        >
+                            <div style="height: 140px"></div>
+                        </el-tab-pane>
+                        <el-tab-pane
+                            :label="
+                                successfulTransfers === 0
+                                    ? 'Successful transfers'
+                                    : 'Successful transfers (' + successfulTransfers + ')'
+                            "
+                            name="suceessfulTransfers"
+                        >
+                            <div style="height: 140px"></div>
+                        </el-tab-pane>
+                    </el-tabs>
+                </div>
             </div>
         </div>
         <div v-show="classify === 'Sessions'">
