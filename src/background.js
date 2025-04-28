@@ -151,7 +151,7 @@ ipcMain.handle('getHome', async () => {
         drives.push(app.getPath('desktop'))
         for (let i = 0; i < windowsDrives.length; i++) {
             if (windowsDrives[i]) {
-                drives.push(windowsDrives[i])
+                drives.push(path.join(windowsDrives[i], '\\'))
             }
         }
         return drives

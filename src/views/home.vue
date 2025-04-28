@@ -243,6 +243,7 @@
                                 @select="handleLocalSelect"
                                 size="small"
                                 style="width: 100%"
+                                @change="localPathChange"
                             >
                                 <template slot-scope="{ item }">
                                     {{ item }}
@@ -782,6 +783,7 @@ const dayjs = require('dayjs')
 const path = require('path')
 const { Client } = require('ssh2')
 var shell = require('shelljs')
+const fs = require('fs')
 var Mode = require('stat-mode')
 
 export default {
@@ -902,6 +904,55 @@ export default {
         this.getHome()
     },
     methods: {
+        getDir(directoryPath) {
+            let result = [
+                {
+                    kind: '',
+                    name: '..'
+                }
+            ]
+            try {
+                let files = fs.readdirSync(directoryPath)
+                for (let i = 0; i < files.length; i++) {
+                    let file = files[i]
+                    try {
+                        let stat = fs.lstatSync(path.join(directoryPath, file))
+                        var mode = new Mode(stat)
+                        let permissions = mode.toString()
+                        let kind = permissions.substring(0, 1)
+                        if (kind === '-') {
+                            kind = 'file'
+                        } else if (kind === 'd') {
+                            kind = 'folder'
+                        } else if (kind === 'p') {
+                            kind = 'FIFO'
+                        } else if (kind === 'l') {
+                            kind = 'link'
+                        } else if (kind === 'b') {
+                            kind = 'block'
+                        } else if (kind === 'c') {
+                            kind = 'character'
+                        } else if (kind === 's') {
+                            kind = 'socket'
+                        } else {
+                            kind = 'other'
+                        }
+                        result.push({
+                            name: file,
+                            size: kind === 'file' ? filesize(stat.size, { standard: 'jedec' }) : '--',
+                            kind: kind,
+                            modifiedTime: dayjs(stat.mtimeMs).format('M/D/YY H:m A'),
+                            permissions: permissions
+                        })
+                    } catch (err) {
+                        console.log(err)
+                    }
+                }
+            } catch (error) {
+                result = []
+            }
+            return result
+        },
         async getHome() {
             if (os.platform() === 'win32') {
                 let drives = await window.ipcRenderer.invoke('getHome')
@@ -909,6 +960,7 @@ export default {
                 this.localOptions = drives
             } else {
                 this.localPath = await window.ipcRenderer.invoke('getHome')
+                this.localOptions.push(this.localPath)
             }
             this.curLocalPath = this.localPath
             let localRowData = [
@@ -917,6 +969,7 @@ export default {
                     name: '..'
                 }
             ]
+            this.getDir(this.localPath)
             shell.ls('-lA', [this.localPath]).forEach(file => {
                 var mode = new Mode(file)
                 let permissions = mode.toString()
@@ -1041,49 +1094,27 @@ export default {
                     password: item.password
                 })
         },
-        handleLocalSelect(path) {
-            let localRowData = [
-                {
-                    kind: '',
-                    name: '..'
-                }
-            ]
-            shell.ls('-lA', [path]).forEach(file => {
-                var mode = new Mode(file)
-                let permissions = mode.toString()
-                let kind = permissions.substring(0, 1)
-                if (kind === '-') {
-                    kind = 'file'
-                } else if (kind === 'd') {
-                    kind = 'folder'
-                } else if (kind === 'p') {
-                    kind = 'FIFO'
-                } else if (kind === 'l') {
-                    kind = 'link'
-                } else if (kind === 'b') {
-                    kind = 'block'
-                } else if (kind === 'c') {
-                    kind = 'character'
-                } else if (kind === 's') {
-                    kind = 'socket'
-                } else {
-                    kind = 'other'
-                }
-                localRowData.push({
-                    name: file.name,
-                    size: kind === 'file' ? filesize(file.size, { standard: 'jedec' }) : '--',
-                    kind: kind,
-                    modifiedTime: dayjs(file.mtimeMs).format('M/D/YY H:m A'),
-                    permissions: permissions
-                })
-            })
-            this.localRowData = localRowData
-            this.curLocalPath = path
-            this.localPath = path
+        handleLocalSelect(selectPath) {
+            let localRowData = this.getDir(selectPath)
+            if (localRowData.length != 0) {
+                this.localRowData = localRowData
+                this.curLocalPath = selectPath
+                this.localPath = pselectPathath
+            }
         },
-        handleRemoteSelect(path) {
+        localPathChange() {
+            let localRowData = this.getDir(this.localPath)
+            if (localRowData.length != 0) {
+                this.localRowData = localRowData
+                this.curLocalPath = this.localPath
+                if (!this.localOptions.includes(this.localPath)) {
+                    this.localOptions.push(this.localPath)
+                }
+            }
+        },
+        handleRemoteSelect(selectPath) {
             if (this.sftp) {
-                this.sftp.readdir(path, (err, list) => {
+                this.sftp.readdir(selectPath, (err, list) => {
                     if (err) {
                         return
                     }
@@ -1122,8 +1153,8 @@ export default {
                         })
                     }
                     this.remoteRowData = remoteRowData
-                    this.curRemotePath = path
-                    this.remotePath = path
+                    this.curRemotePath = selectPath
+                    this.remotePath = selectPath
                 })
             }
         },
