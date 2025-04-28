@@ -146,8 +146,15 @@ function handleDbExit() {
 
 ipcMain.handle('getHome', async () => {
     if (process.platform === 'win32') {
-        let drives = getWindowsDrives()
-        console.log(drives)
+        let windowsDrives = await getWindowsDrives()
+        let drives = []
+        drives.push(app.getPath('desktop'))
+        for (let i = 0; i < windowsDrives.length; i++) {
+            if (windowsDrives[i]) {
+                drives.push(windowsDrives[i])
+            }
+        }
+        console.log(app.getPath('home'))
         return app.getPath('desktop')
     } else {
         return app.getPath('home')
