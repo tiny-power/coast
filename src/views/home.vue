@@ -1028,7 +1028,7 @@ export default {
         this.getHome()
     },
     methods: {
-        readDirRecursively(dirPath, rootPath) {
+        readLocalDirRecursively(dirPath, rootPath) {
             let folderList = []
             let fileList = []
             const list = fs.readdirSync(dirPath, { withFileTypes: true })
@@ -1036,13 +1036,39 @@ export default {
                 const fullPath = path.join(dirPath, dirent.name)
                 if (dirent.isDirectory()) {
                     folderList.push(fullPath.replace(rootPath, this.curRemotePath))
-                    let result = this.readDirRecursively(fullPath, rootPath)
+                    let result = this.readLocalDirRecursively(fullPath, rootPath)
                     fileList = fileList.concat(result.fileList)
                     folderList = folderList.concat(result.folderList)
                 } else {
                     fileList.push(fullPath.replace(rootPath, this.curRemotePath))
                 }
             })
+            return { folderList: folderList, fileList: fileList }
+        },
+        asyncReadDir(dirPath) {
+            return new Promise((resolve, reject) => {
+                this.sftp.readdir(dirPath, (err, list) => {
+                    if (err) reject(err)
+                    else resolve(list)
+                })
+            })
+        },
+        async readRemoteDirRecursively(dirPath, rootPath) {
+            let list = await this.asyncReadDir(dirPath)
+            let folderList = []
+            let fileList = []
+            for (let i = 0; i < list.length; i++) {
+                let row = list[i]
+                const fullPath = path.join(dirPath, row.filename)
+                if (row.attrs.isDirectory()) {
+                    folderList.push(fullPath.replace(rootPath, this.curLocalPath))
+                    let result = await this.readRemoteDirRecursively(fullPath, rootPath)
+                    fileList = fileList.concat(result.fileList)
+                    folderList = folderList.concat(result.folderList)
+                } else {
+                    fileList.push(fullPath.replace(rootPath, this.curLocalPath))
+                }
+            }
             return { folderList: folderList, fileList: fileList }
         },
         handleSelectionChange(selection) {
@@ -1075,7 +1101,7 @@ export default {
                 this.$refs.multipleTable.toggleRowSelection(row, true)
             }
         },
-        mkdirFolder(newFolderList) {
+        mkdirLocalFolder(newFolderList) {
             return new Promise((resolve, reject) => {
                 this.conn.exec('mkdir ' + newFolderList.join(' '), (err, stream) => {
                     if (err) {
@@ -1083,7 +1109,7 @@ export default {
                     } else {
                         stream
                             .on('close', (code, signal) => {
-                                console.log('close')
+                                console.log('mkdir :: close')
                                 this.updateSftp()
                                 resolve()
                             })
@@ -1119,7 +1145,7 @@ export default {
                                 remote: file,
                                 direction: '-->>',
                                 time: dayjs().format('M/D/YY H:m A'),
-                                reason: err
+                                reason: err.toString()
                             }
                             this.failedTransfersList = Object.values(this.failedTransfersObject)
                             console.error('Upload Error:', err)
@@ -1143,7 +1169,7 @@ export default {
         async menuLocalAction(action) {
             if (action === 'upload') {
                 if (this.contextmenuItem.kind === 'folder') {
-                    const result = this.readDirRecursively(
+                    const result = this.readLocalDirRecursively(
                         path.join(this.curLocalPath, this.contextmenuItem.name),
                         this.curLocalPath
                     )
@@ -1155,11 +1181,11 @@ export default {
                             .replace(this.curLocalPath, this.curRemotePath)
                     )
                     let length = Math.ceil(folderList.length / 500)
-                    const limit = pLimit(length)
+                    const limit = pLimit(5)
                     const input = []
                     for (let j = 0; j < length; j++) {
                         let newFolderList = folderList.slice(j * 500, (j + 1) * 500)
-                        input.push(limit(() => this.mkdirFolder(newFolderList)))
+                        input.push(limit(() => this.mkdirLocalFolder(newFolderList)))
                     }
                     await Promise.all(input)
                     const fileLimit = pLimit(5)
@@ -1209,7 +1235,7 @@ export default {
                                     direction: '-->>',
                                     time: dayjs().format('M/D/YY H:m A'),
                                     size: this.contextmenuItem.size,
-                                    reason: err
+                                    reason: err.toString()
                                 }
                                 this.failedTransfersList = Object.values(this.failedTransfersObject)
                                 console.error('Upload Error:', err)
@@ -1310,9 +1336,95 @@ export default {
             } else if (action === 'Create directory and enter it') {
             }
         },
-        menuRemoteAction(action) {
+        mkdirRemoteFolder(newFolderList) {
+            shell.mkdir('-p', newFolderList)
+        },
+        fastGet(file, curRemotePath, curLocalPath) {
+            return new Promise((resolve, reject) => {
+                let remoteFile = file.replace(curLocalPath, curRemotePath)
+                this.sftp.fastGet(
+                    remoteFile,
+                    file,
+                    {
+                        step: (total_transferred, chunk, total) => {
+                            //console.log(total_transferred, chunk, total)
+                        }
+                    },
+                    err => {
+                        this.queuedFiles = this.queuedFiles - 1
+                        this.$delete(this.queuedFilesObject, file)
+                        this.queuedFilesList = Object.values(this.queuedFilesObject)
+                        if (err) {
+                            this.failedTransfers = this.failedTransfers + 1
+                            this.failedTransfersObject[file] = {
+                                local: file,
+                                remote: remoteFile,
+                                direction: '<<--',
+                                time: dayjs().format('M/D/YY H:m A'),
+                                reason: err.toString()
+                            }
+                            this.failedTransfersList = Object.values(this.failedTransfersObject)
+                            console.error('Upload Error:', err)
+                            reject()
+                        } else {
+                            // console.log('Upload Success:', file)
+                            this.successfulTransfers = this.successfulTransfers + 1
+                            this.successfulTransfersObject[file] = {
+                                local: file,
+                                remote: remoteFile,
+                                direction: '<<--',
+                                time: dayjs().format('M/D/YY H:m A')
+                            }
+                            this.successfulTransfersList = Object.values(this.successfulTransfersObject)
+                            resolve()
+                        }
+                    }
+                )
+            })
+        },
+        async menuRemoteAction(action) {
             if (action === 'download') {
                 if (this.contextmenuItem.kind === 'folder') {
+                    const result = await this.readRemoteDirRecursively(
+                        path.join(this.curRemotePath, this.contextmenuItem.name),
+                        this.curRemotePath
+                    )
+                    let folderList = result.folderList
+                    let fileList = result.fileList
+                    folderList.unshift(
+                        path
+                            .join(this.curRemotePath, this.contextmenuItem.name)
+                            .replace(this.curRemotePath, this.curLocalPath)
+                    )
+
+                    let length = Math.ceil(folderList.length / 500)
+                    const limit = pLimit(5)
+                    const input = []
+                    for (let j = 0; j < length; j++) {
+                        let newFolderList = folderList.slice(j * 500, (j + 1) * 500)
+                        input.push(limit(() => this.mkdirRemoteFolder(newFolderList)))
+                    }
+                    await Promise.all(input)
+                    let localRowData = this.getLocalDir(this.curLocalPath)
+                    if (localRowData.length != 0) {
+                        this.localRowData = localRowData
+                    }
+                    const fileLimit = pLimit(5)
+                    const fileInput = []
+                    this.queuedFiles = this.queuedFiles + fileList.length
+                    let curRemotePath = this.curRemotePath
+                    let curLocalPath = this.curLocalPath
+                    for (let i = 0; i < fileList.length; i++) {
+                        this.queuedFilesObject[fileList[i]] = {
+                            local: fileList[i],
+                            remote: fileList[i].replace(curLocalPath, curRemotePath),
+                            direction: '<<--'
+                        }
+                        this.queuedFilesList = Object.values(this.queuedFilesObject)
+                        fileInput.push(limit(() => this.fastGet(fileList[i], curRemotePath, curLocalPath)))
+                    }
+                    await Promise.all(fileInput)
+                    console.log('Upload Success')
                 } else if (this.contextmenuItem.kind === 'file') {
                     const remoteFile = path.join(this.curRemotePath, this.contextmenuItem.name)
                     const localFile = path.join(this.curLocalPath, path.basename(remoteFile))
@@ -1344,7 +1456,7 @@ export default {
                                     direction: '<<--',
                                     time: dayjs().format('M/D/YY H:m A'),
                                     size: this.contextmenuItem.size,
-                                    reason: err
+                                    reason: err.toString()
                                 }
                                 this.failedTransfersList = Object.values(this.failedTransfersObject)
                                 console.error('Download Error:', err)
