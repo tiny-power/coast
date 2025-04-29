@@ -254,10 +254,16 @@
                             <el-table
                                 :data="localRowData"
                                 :style="{ width: clientWidth / 2 + 'px', overflow: 'auto' }"
-                                :max-height="clientHeight - 360"
+                                :height="clientHeight - 360"
                                 @cell-dblclick="localRowDoubleClicked"
                                 @row-contextmenu="localRowContextmenu"
                                 border
+                                highlight-current-row
+                                @selection-change="handleSelectionChange"
+                                ref="multipleTable"
+                                @row-click="handleRowClick"
+                                @cell-click="handleCellClick"
+                                row-key="name"
                             >
                                 <template slot="empty">
                                     <div :style="{ height: clientHeight - 360 + 'px' }">
@@ -311,21 +317,21 @@
                                 >
                                     <span>Upload</span>
                                 </li>
-                                <li @click="menuLocalAction('Create directory')" style="width: 250px">
+                                <!-- <li @click="menuLocalAction('Create directory')" style="width: 250px">
                                     <span>Create directory</span>
                                 </li>
                                 <li @click="menuLocalAction('Create directory and enter it')" style="width: 250px">
                                     <span>Create directory and enter it</span>
-                                </li>
+                                </li> -->
                                 <li @click="menuLocalAction('refresh')" style="width: 250px">
                                     <span>Refresh</span>
                                 </li>
                                 <li @click="menuLocalAction('delete')" style="width: 250px">
                                     <span>Delete</span>
                                 </li>
-                                <li @click="menuLocalAction('rename')" style="width: 250px">
+                                <!-- <li @click="menuLocalAction('rename')" style="width: 250px">
                                     <span>Rename</span>
-                                </li>
+                                </li> -->
                             </ul>
                         </div>
                     </div>
@@ -369,10 +375,11 @@
                             <el-table
                                 :data="remoteRowData"
                                 :style="{ width: clientWidth / 2 + 'px', overflow: 'auto' }"
-                                :max-height="clientHeight - 360"
+                                :height="clientHeight - 360"
                                 @cell-dblclick="remoteRowDoubleClicked"
                                 @row-contextmenu="remoteRowContextmenu"
                                 border
+                                highlight-current-row
                             >
                                 <template slot="empty">
                                     <div :style="{ height: clientHeight - 360 + 'px' }">
@@ -422,24 +429,24 @@
                                 <li @click="menuRemoteAction('download')" style="width: 250px">
                                     <span>Download</span>
                                 </li>
-                                <li @click="menuRemoteAction('Create directory')" style="width: 250px">
+                                <!-- <li @click="menuRemoteAction('Create directory')" style="width: 250px">
                                     <span>Create directory</span>
                                 </li>
                                 <li @click="menuRemoteAction('Create directory and enter it')" style="width: 250px">
                                     <span>Create directory and enter it</span>
-                                </li>
+                                </li> -->
                                 <li @click="menuRemoteAction('refresh')" style="width: 250px">
                                     <span>Refresh</span>
                                 </li>
                                 <li @click="menuRemoteAction('delete')" style="width: 250px">
                                     <span>Delete</span>
                                 </li>
-                                <li @click="menuRemoteAction('rename')" style="width: 250px">
+                                <!-- <li @click="menuRemoteAction('rename')" style="width: 250px">
                                     <span>Rename</span>
                                 </li>
-                                <li @click="menuRemoteAction('File permissions...')" style="width: 250px">
+                                <li @click="menuRemoteAction('File permissions')" style="width: 250px">
                                     <span>File permissions...</span>
-                                </li>
+                                </li> -->
                             </ul>
                         </div>
                     </div>
@@ -447,20 +454,49 @@
                 <div style="height: 200px">
                     <el-tabs type="border-card" v-model="transfers" class="transfers">
                         <el-tab-pane
-                            :label="queuedFiles === 0 ? 'Queued files' : 'Queued files (' + successfulTransfers + ')'"
+                            :label="queuedFiles === 0 ? 'Queued files' : 'Queued files (' + queuedFiles + ')'"
                             name="queuedFiles"
                         >
-                            <div style="height: 140px"></div>
+                            <el-table
+                                :data="queuedFilesList"
+                                style="width: 100%; overflow: auto"
+                                height="170"
+                                border
+                                highlight-current-row
+                                empty-text=" "
+                            >
+                                <el-table-column label="Server/Local file" prop="local"> </el-table-column>
+                                <el-table-column label="Direction" prop="direction" width="80" align="center">
+                                </el-table-column>
+                                <el-table-column label="Remote file" prop="remote"> </el-table-column>
+                                <el-table-column label="Size" prop="size" width="136"> </el-table-column>
+                                <el-table-column label="Status" prop="status" width="136"> </el-table-column>
+                            </el-table>
                         </el-tab-pane>
                         <el-tab-pane
                             :label="
                                 failedTransfers === 0
                                     ? 'Failed transfers'
-                                    : 'Failed transfers (' + successfulTransfers + ')'
+                                    : 'Failed transfers (' + failedTransfers + ')'
                             "
                             name="failedTransfers"
                         >
-                            <div style="height: 140px"></div>
+                            <el-table
+                                :data="failedTransfersList"
+                                style="width: 100%; overflow: auto"
+                                height="170"
+                                border
+                                highlight-current-row
+                                empty-text=" "
+                            >
+                                <el-table-column label="Server/Local file" prop="local"> </el-table-column>
+                                <el-table-column label="Direction" prop="direction" width="80" align="center">
+                                </el-table-column>
+                                <el-table-column label="Remote file" prop="remote"> </el-table-column>
+                                <el-table-column label="Size" prop="size" width="136"> </el-table-column>
+                                <el-table-column label="Time" prop="time" width="136"> </el-table-column>
+                                <el-table-column label="Reason" prop="reason"> </el-table-column>
+                            </el-table>
                         </el-tab-pane>
                         <el-tab-pane
                             :label="
@@ -470,7 +506,21 @@
                             "
                             name="suceessfulTransfers"
                         >
-                            <div style="height: 140px"></div>
+                            <el-table
+                                :data="successfulTransfersList"
+                                style="width: 100%; overflow: auto"
+                                height="170"
+                                border
+                                highlight-current-row
+                                empty-text=" "
+                            >
+                                <el-table-column label="Server/Local file" prop="local"> </el-table-column>
+                                <el-table-column label="Direction" prop="direction" width="80" align="center">
+                                </el-table-column>
+                                <el-table-column label="Remote file" prop="remote"> </el-table-column>
+                                <el-table-column label="Size" prop="size" width="136"> </el-table-column>
+                                <el-table-column label="Time" prop="time" width="136"> </el-table-column>
+                            </el-table>
                         </el-tab-pane>
                     </el-tabs>
                 </div>
@@ -844,6 +894,7 @@ import themes from '@/themes/index'
 import '@xterm/xterm/css/xterm.css'
 import os from 'os'
 import { filesize } from 'filesize'
+import pLimit from 'p-limit'
 const dayjs = require('dayjs')
 const path = require('path')
 const { Client } = require('ssh2')
@@ -926,6 +977,9 @@ export default {
             queuedFiles: 0,
             failedTransfers: 0,
             successfulTransfers: 0,
+            queuedFilesObject: {},
+            failedTransfersObject: {},
+            successfulTransfersObject: {},
             queuedFilesList: [],
             failedTransfersList: [],
             successfulTransfersList: [],
@@ -935,7 +989,9 @@ export default {
             curRemotePath: '',
             isLocalMenuVisible: false,
             isRemoteMenuVisible: false,
-            selectedFileName: ''
+            contextmenuItem: {},
+            selectedRows: [],
+            limit: null
         }
     },
     mounted() {
@@ -972,137 +1028,444 @@ export default {
         this.getHome()
     },
     methods: {
-        async menuLocalAction(action) {
-            if (action === 'upload') {
-                const localFile = path.join(this.curLocalPath, this.selectedFileName)
-                const remoteFile = path.join(this.curRemotePath, path.basename(localFile))
+        readDirRecursively(dirPath, rootPath) {
+            let folderList = []
+            let fileList = []
+            const list = fs.readdirSync(dirPath, { withFileTypes: true })
+            list.forEach(dirent => {
+                const fullPath = path.join(dirPath, dirent.name)
+                if (dirent.isDirectory()) {
+                    folderList.push(fullPath.replace(rootPath, this.curRemotePath))
+                    let result = this.readDirRecursively(fullPath, rootPath)
+                    fileList = fileList.concat(result.fileList)
+                    folderList = folderList.concat(result.folderList)
+                } else {
+                    fileList.push(fullPath.replace(rootPath, this.curRemotePath))
+                }
+            })
+            return { folderList: folderList, fileList: fileList }
+        },
+        handleSelectionChange(selection) {
+            this.selectedRows = selection
+        },
+        handleRowClick(row, column, event) {
+            if (event.ctrlKey) {
+                this.toggleRowSelection(row)
+            } else {
+                this.$refs.multipleTable.clearSelection()
+                this.$refs.multipleTable.toggleRowSelection(row)
+            }
+        },
+        handleCellClick(row, column, cell, event) {
+            if (event.ctrlKey) {
+                this.toggleRowSelection(row)
+            } else {
+                this.$refs.multipleTable.clearSelection()
+                this.$refs.multipleTable.toggleRowSelection(row)
+            }
+        },
+        toggleRowSelection(row) {
+            const selected = this.selectedRows.includes(row)
+            if (selected) {
+                const index = this.selectedRows.findIndex(d => d.id === row.id)
+                this.selectedRows.splice(index, 1)
+                this.$refs.multipleTable.toggleRowSelection(row, false)
+            } else {
+                this.selectedRows.push({ ...row })
+                this.$refs.multipleTable.toggleRowSelection(row, true)
+            }
+        },
+        mkdirFolder(newFolderList) {
+            return new Promise((resolve, reject) => {
+                this.conn.exec('mkdir ' + newFolderList.join(' '), (err, stream) => {
+                    if (err) {
+                        reject()
+                    } else {
+                        stream
+                            .on('close', (code, signal) => {
+                                console.log('close')
+                                this.updateSftp()
+                                resolve()
+                            })
+                            .on('data', data => {
+                                console.log('STDOUT:', data.toString())
+                            })
+                            .stderr.on('data', data => {
+                                console.error('STDERR:', data.toString())
+                            })
+                    }
+                })
+            })
+        },
+        fastPut(file, curRemotePath, curLocalPath) {
+            return new Promise((resolve, reject) => {
+                let localFile = file.replace(curRemotePath, curLocalPath)
                 this.sftp.fastPut(
                     localFile,
-                    remoteFile,
+                    file,
                     {
                         step: (total_transferred, chunk, total) => {
-                            console.log(total_transferred, chunk, total)
+                            //console.log(total_transferred, chunk, total)
                         }
                     },
                     err => {
+                        this.queuedFiles = this.queuedFiles - 1
+                        this.$delete(this.queuedFilesObject, localFile)
+                        this.queuedFilesList = Object.values(this.queuedFilesObject)
                         if (err) {
-                            console.error('Upload Error:', err)
-                        } else {
-                            if (this.sftp) {
-                                this.sftp.readdir(this.curRemotePath, (err, list) => {
-                                    if (err) {
-                                        return
-                                    }
-                                    let remoteRowData = [
-                                        {
-                                            kind: '',
-                                            name: '..'
-                                        }
-                                    ]
-                                    for (let i = 0; i < list.length; i++) {
-                                        let row = list[i]
-                                        let kind = row.longname.substring(0, 1)
-                                        if (kind === '-') {
-                                            kind = 'file'
-                                        } else if (kind === 'd') {
-                                            kind = 'folder'
-                                        } else if (kind === 'p') {
-                                            kind = 'FIFO'
-                                        } else if (kind === 'l') {
-                                            kind = 'link'
-                                        } else if (kind === 'b') {
-                                            kind = 'block'
-                                        } else if (kind === 'c') {
-                                            kind = 'character'
-                                        } else if (kind === 's') {
-                                            kind = 'socket'
-                                        } else {
-                                            kind = 'other'
-                                        }
-                                        remoteRowData.push({
-                                            name: row.filename,
-                                            size:
-                                                kind === 'file'
-                                                    ? filesize(row.attrs.size, { standard: 'jedec' })
-                                                    : '--',
-                                            kind: kind,
-                                            modifiedTime: dayjs.unix(row.attrs.mtime).format('M/D/YY H:m A'),
-                                            permissions: row.longname.substring(0, 11)
-                                        })
-                                    }
-                                    this.remoteRowData = remoteRowData
-                                })
+                            this.failedTransfers = this.failedTransfers + 1
+                            this.failedTransfersObject[localFile] = {
+                                local: localFile,
+                                remote: file,
+                                direction: '-->>',
+                                time: dayjs().format('M/D/YY H:m A'),
+                                reason: err
                             }
+                            this.failedTransfersList = Object.values(this.failedTransfersObject)
+                            console.error('Upload Error:', err)
+                            reject()
+                        } else {
+                            // console.log('Upload Success:', file)
+                            this.successfulTransfers = this.successfulTransfers + 1
+                            this.successfulTransfersObject[localFile] = {
+                                local: localFile,
+                                remote: file,
+                                direction: '-->>',
+                                time: dayjs().format('M/D/YY H:m A')
+                            }
+                            this.successfulTransfersList = Object.values(this.successfulTransfersObject)
+                            resolve()
                         }
                     }
                 )
-            } else if (action === 'delete') {
-                // try {
-                //     await fs.rm(path.join(this.curLocalPath, this.selectedFileName), { recursive: true, force: true  })
-                //     console.log('Delete Success')
-                // } catch (error) {
-                //     console.error('Delete Error:', error)
-                // }
-                try {
-                    fs.unlinkSync(path.join(this.curLocalPath, this.selectedFileName))
-                    let localRowData = this.getLocalDir(this.curLocalPath)
-                    if (localRowData.length != 0) {
-                        this.localRowData = localRowData
+            })
+        },
+        async menuLocalAction(action) {
+            if (action === 'upload') {
+                if (this.contextmenuItem.kind === 'folder') {
+                    const result = this.readDirRecursively(
+                        path.join(this.curLocalPath, this.contextmenuItem.name),
+                        this.curLocalPath
+                    )
+                    let folderList = result.folderList
+                    let fileList = result.fileList
+                    folderList.unshift(
+                        path
+                            .join(this.curLocalPath, this.contextmenuItem.name)
+                            .replace(this.curLocalPath, this.curRemotePath)
+                    )
+                    let length = Math.ceil(folderList.length / 500)
+                    const limit = pLimit(length)
+                    const input = []
+                    for (let j = 0; j < length; j++) {
+                        let newFolderList = folderList.slice(j * 500, (j + 1) * 500)
+                        input.push(limit(() => this.mkdirFolder(newFolderList)))
                     }
-                    console.log('Delete Success')
-                } catch (err) {
-                    console.error('Delete Error:', error)
+                    await Promise.all(input)
+                    const fileLimit = pLimit(5)
+                    const fileInput = []
+                    this.queuedFiles = this.queuedFiles + fileList.length
+                    let curRemotePath = this.curRemotePath
+                    let curLocalPath = this.curLocalPath
+                    for (let i = 0; i < fileList.length; i++) {
+                        this.queuedFilesObject[fileList[i].replace(curRemotePath, curLocalPath)] = {
+                            local: fileList[i].replace(curRemotePath, curLocalPath),
+                            remote: fileList[i],
+                            direction: '-->>'
+                        }
+                        this.queuedFilesList = Object.values(this.queuedFilesObject)
+                        fileInput.push(limit(() => this.fastPut(fileList[i], curRemotePath, curLocalPath)))
+                    }
+                    await Promise.all(fileInput)
+                    console.log('Upload Success')
+                } else if (this.contextmenuItem.kind === 'file') {
+                    const localFile = path.join(this.curLocalPath, this.contextmenuItem.name)
+                    const remoteFile = path.join(this.curRemotePath, path.basename(localFile))
+                    this.queuedFiles = this.queuedFiles + 1
+                    this.queuedFilesObject[localFile] = {
+                        local: localFile,
+                        remote: remoteFile,
+                        direction: '-->>',
+                        size: this.contextmenuItem.size
+                    }
+                    this.queuedFilesList = Object.values(this.queuedFilesObject)
+                    this.sftp.fastPut(
+                        localFile,
+                        remoteFile,
+                        {
+                            step: (total_transferred, chunk, total) => {
+                                //console.log(total_transferred, chunk, total)
+                            }
+                        },
+                        err => {
+                            this.queuedFiles = this.queuedFiles - 1
+                            this.$delete(this.queuedFilesObject, localFile)
+                            this.queuedFilesList = Object.values(this.queuedFilesObject)
+                            if (err) {
+                                this.failedTransfers = this.failedTransfers + 1
+                                this.failedTransfersObject[localFile] = {
+                                    local: localFile,
+                                    remote: remoteFile,
+                                    direction: '-->>',
+                                    time: dayjs().format('M/D/YY H:m A'),
+                                    size: this.contextmenuItem.size,
+                                    reason: err
+                                }
+                                this.failedTransfersList = Object.values(this.failedTransfersObject)
+                                console.error('Upload Error:', err)
+                            } else {
+                                this.successfulTransfers = this.successfulTransfers + 1
+                                this.successfulTransfersObject[localFile] = {
+                                    local: localFile,
+                                    remote: remoteFile,
+                                    direction: '-->>',
+                                    time: dayjs().format('M/D/YY H:m A'),
+                                    size: this.contextmenuItem.size
+                                }
+                                this.successfulTransfersList = Object.values(this.successfulTransfersObject)
+                                if (this.sftp) {
+                                    this.sftp.readdir(this.curRemotePath, (err, list) => {
+                                        if (err) {
+                                            return
+                                        }
+                                        let remoteRowData = [
+                                            {
+                                                kind: '',
+                                                name: '..'
+                                            }
+                                        ]
+                                        for (let i = 0; i < list.length; i++) {
+                                            let row = list[i]
+                                            let kind = row.longname.substring(0, 1)
+                                            if (kind === '-') {
+                                                kind = 'file'
+                                            } else if (kind === 'd') {
+                                                kind = 'folder'
+                                            } else if (kind === 'p') {
+                                                kind = 'FIFO'
+                                            } else if (kind === 'l') {
+                                                kind = 'link'
+                                            } else if (kind === 'b') {
+                                                kind = 'block'
+                                            } else if (kind === 'c') {
+                                                kind = 'character'
+                                            } else if (kind === 's') {
+                                                kind = 'socket'
+                                            } else {
+                                                kind = 'other'
+                                            }
+                                            remoteRowData.push({
+                                                name: row.filename,
+                                                size:
+                                                    kind === 'file'
+                                                        ? filesize(row.attrs.size, { standard: 'jedec' })
+                                                        : '--',
+                                                kind: kind,
+                                                modifiedTime: dayjs.unix(row.attrs.mtime).format('M/D/YY H:m A'),
+                                                permissions: row.longname.substring(0, 11)
+                                            })
+                                        }
+                                        this.remoteRowData = remoteRowData
+                                    })
+                                }
+                            }
+                        }
+                    )
+                }
+            } else if (action === 'delete') {
+                if (this.contextmenuItem.kind === 'folder') {
+                    fs.rmdir(
+                        path.join(this.curLocalPath, this.contextmenuItem.name),
+                        { recursive: true, force: true },
+                        err => {
+                            if (err) {
+                                console.error('Download Error:', err)
+                            } else {
+                                let localRowData = this.getLocalDir(this.curLocalPath)
+                                if (localRowData.length != 0) {
+                                    this.localRowData = localRowData
+                                }
+                            }
+                        }
+                    )
+                } else if (this.contextmenuItem.kind === 'file' || this.contextmenuItem.kind === 'link') {
+                    try {
+                        fs.unlinkSync(path.join(this.curLocalPath, this.contextmenuItem.name))
+                        let localRowData = this.getLocalDir(this.curLocalPath)
+                        if (localRowData.length != 0) {
+                            this.localRowData = localRowData
+                        }
+                        console.log('Delete Success')
+                    } catch (err) {
+                        console.error('Delete Error:', error)
+                    }
                 }
             } else if (action === 'rename') {
+            } else if (action === 'refresh') {
+                let localRowData = this.getLocalDir(this.curLocalPath)
+                if (localRowData.length != 0) {
+                    this.localRowData = localRowData
+                }
+            } else if (action === 'Create directory') {
+            } else if (action === 'Create directory and enter it') {
             }
         },
         menuRemoteAction(action) {
             if (action === 'download') {
-                const remoteFile = path.join(this.curRemotePath, this.selectedFileName)
-                const localFile = path.join(this.curLocalPath, path.basename(remoteFile))
-                this.sftp.fastGet(
-                    remoteFile,
-                    localFile,
-                    {
-                        step: (total_transferred, chunk, total) => {
-                            console.log(total_transferred, chunk, total)
-                        }
-                    },
-                    err => {
-                        if (err) {
-                            console.error('Download Error:', err)
-                        } else {
-                            let localRowData = this.getLocalDir(this.curLocalPath)
-                            if (localRowData.length != 0) {
-                                this.localRowData = localRowData
+                if (this.contextmenuItem.kind === 'folder') {
+                } else if (this.contextmenuItem.kind === 'file') {
+                    const remoteFile = path.join(this.curRemotePath, this.contextmenuItem.name)
+                    const localFile = path.join(this.curLocalPath, path.basename(remoteFile))
+                    this.queuedFiles = this.queuedFiles + 1
+                    this.queuedFilesObject[localFile] = {
+                        local: localFile,
+                        remote: remoteFile,
+                        direction: '<<--',
+                        size: this.contextmenuItem.size
+                    }
+                    this.queuedFilesList = Object.values(this.queuedFilesObject)
+                    this.sftp.fastGet(
+                        remoteFile,
+                        localFile,
+                        {
+                            step: (total_transferred, chunk, total) => {
+                                //console.log(total_transferred, chunk, total)
+                            }
+                        },
+                        err => {
+                            this.queuedFiles = this.queuedFiles - 1
+                            this.$delete(this.queuedFilesObject, localFile)
+                            this.queuedFilesList = Object.values(this.queuedFilesObject)
+                            if (err) {
+                                this.failedTransfers = this.failedTransfers + 1
+                                this.failedTransfersObject[localFile] = {
+                                    local: localFile,
+                                    remote: remoteFile,
+                                    direction: '<<--',
+                                    time: dayjs().format('M/D/YY H:m A'),
+                                    size: this.contextmenuItem.size,
+                                    reason: err
+                                }
+                                this.failedTransfersList = Object.values(this.failedTransfersObject)
+                                console.error('Download Error:', err)
+                            } else {
+                                this.successfulTransfers = this.successfulTransfers + 1
+                                this.successfulTransfersObject[localFile] = {
+                                    local: localFile,
+                                    remote: remoteFile,
+                                    direction: '<<--',
+                                    time: dayjs().format('M/D/YY H:m A'),
+                                    size: this.contextmenuItem.size
+                                }
+                                this.successfulTransfersList = Object.values(this.successfulTransfersObject)
+                                let localRowData = this.getLocalDir(this.curLocalPath)
+                                if (localRowData.length != 0) {
+                                    this.localRowData = localRowData
+                                }
                             }
                         }
-                    }
-                )
+                    )
+                }
             } else if (action === 'delete') {
-                this.sftp.rmdir(path.join(this.curRemotePath, this.selectedFileName), err => {
-                    if (err) {
-                        console.error('Delete Error:', err)
-                    } else {
-                        console.log('Delete Success')
-                    }
-                })
+                if (this.contextmenuItem.kind === 'folder') {
+                    this.conn.exec(
+                        'rm -rf ' + path.join(this.curRemotePath, this.contextmenuItem.name),
+                        (err, stream) => {
+                            if (err) throw err
+                            stream
+                                .on('close', (code, signal) => {
+                                    this.updateSftp()
+                                })
+                                .on('data', data => {
+                                    t
+                                    console.log('STDOUT:', data.toString())
+                                })
+                                .stderr.on('data', data => {
+                                    console.error('STDERR:', data.toString())
+                                })
+                        }
+                    )
+                } else if (this.contextmenuItem.kind === 'file' || this.contextmenuItem.kind === 'link') {
+                    this.sftp.unlink(path.join(this.curRemotePath, this.contextmenuItem.name), err => {
+                        if (err) {
+                            console.error('Delete Error:', err)
+                        } else {
+                            this.updateSftp()
+                            console.log('Delete Success')
+                        }
+                    })
+                }
             } else if (action === 'rename') {
+            } else if (action === 'refresh') {
+                this.updateSftp()
+            } else if (action === 'Create directory') {
+            } else if (action === 'Create directory and enter it') {
+            } else if (action === 'File permissions') {
+            }
+        },
+        updateSftp() {
+            if (this.sftp) {
+                this.sftp.readdir(this.curRemotePath, (err, list) => {
+                    if (err) {
+                        return
+                    }
+                    let remoteRowData = [
+                        {
+                            kind: '',
+                            name: '..'
+                        }
+                    ]
+                    for (let i = 0; i < list.length; i++) {
+                        let row = list[i]
+                        let kind = row.longname.substring(0, 1)
+                        if (kind === '-') {
+                            kind = 'file'
+                        } else if (kind === 'd') {
+                            kind = 'folder'
+                        } else if (kind === 'p') {
+                            kind = 'FIFO'
+                        } else if (kind === 'l') {
+                            kind = 'link'
+                        } else if (kind === 'b') {
+                            kind = 'block'
+                        } else if (kind === 'c') {
+                            kind = 'character'
+                        } else if (kind === 's') {
+                            kind = 'socket'
+                        } else {
+                            kind = 'other'
+                        }
+                        remoteRowData.push({
+                            name: row.filename,
+                            size: kind === 'file' ? filesize(row.attrs.size, { standard: 'jedec' }) : '--',
+                            kind: kind,
+                            modifiedTime: dayjs.unix(row.attrs.mtime).format('M/D/YY H:m A'),
+                            permissions: row.longname.substring(0, 11)
+                        })
+                    }
+                    this.remoteRowData = remoteRowData
+                })
             }
         },
         localRowContextmenu(row, column, event) {
             event.preventDefault()
-            this.selectedFileName = row.name
-            this.isLocalMenuVisible = true
-            this.menuTop = event.clientY
-            this.menuLeft = event.clientX
+            if (row.kind != '') {
+                this.contextmenuItem = row
+                this.isLocalMenuVisible = true
+                this.isRemoteMenuVisible = false
+                this.menuTop = event.clientY
+                this.menuLeft = event.clientX
+            }
         },
         remoteRowContextmenu(row, column, event) {
             event.preventDefault()
-            this.selectedFileName = row.name
-            this.isRemoteMenuVisible = true
-            this.menuTop = event.clientY
-            this.menuLeft = event.clientX
+            if (row.kind != '') {
+                this.contextmenuItem = row
+                this.isRemoteMenuVisible = true
+                this.isLocalMenuVisible = false
+                this.menuTop = event.clientY
+                this.menuLeft = event.clientX
+            }
         },
         getLocalDir(directoryPath) {
             let result = [
@@ -2182,7 +2545,7 @@ export default {
     border-color: #272727;
 }
 ::v-deep .el-table td.el-table__cell {
-    border-bottom: 1px solid #eaeaea;
+    border: none;
 }
 ::v-deep .el-checkbox__input.is-checked .el-checkbox__inner,
 ::v-deep .el-checkbox__input.is-indeterminate .el-checkbox__inner {
@@ -2321,5 +2684,12 @@ li:hover {
 }
 ::v-deep .el-table thead th {
     background: #f5f7f7 !important;
+}
+::v-deep .el-table__body tr.current-row > td {
+    background: #0264e1 !important;
+    color: #fff !important;
+}
+::v-deep .el-tabs--border-card > .el-tabs__content {
+    padding: 0px;
 }
 </style>
