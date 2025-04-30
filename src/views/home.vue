@@ -874,16 +874,16 @@
         <el-dialog title="Info" :visible.sync="showAddSession" width="500px">
             <el-form ref="sessionForm" :model="sessionForm" :rules="sessionRules">
                 <el-form-item label="Host Name(or IP address)" prop="host">
-                    <el-input v-model="sessionForm.host" clearable></el-input>
+                    <el-input v-model="sessionForm.host" clearable class="sessionLable"></el-input>
                 </el-form-item>
                 <el-form-item label="Username" prop="username">
-                    <el-input v-model="sessionForm.username" clearable></el-input>
+                    <el-input v-model="sessionForm.username" clearable class="sessionLable"></el-input>
                 </el-form-item>
                 <el-form-item label="Password" prop="password">
-                    <el-input v-model="sessionForm.password" show-password clearable></el-input>
+                    <el-input v-model="sessionForm.password" show-password clearable class="sessionLable"></el-input>
                 </el-form-item>
                 <el-form-item label="Port" prop="port">
-                    <el-input v-model.number="sessionForm.port"></el-input>
+                    <el-input v-model.number="sessionForm.port" class="sessionLable"></el-input>
                 </el-form-item>
             </el-form>
             <span slot="footer" class="dialog-footer">
@@ -894,19 +894,19 @@
         <el-dialog title="Info" :visible.sync="showEditSession" width="500px">
             <el-form ref="sessionForm" :model="sessionForm" :rules="sessionRules">
                 <el-form-item label="Label">
-                    <el-input v-model="sessionForm.label" clearable></el-input>
+                    <el-input v-model="sessionForm.label" clearable class="sessionLable"></el-input>
                 </el-form-item>
                 <el-form-item label="Host Name(or IP address)" prop="host">
-                    <el-input v-model="sessionForm.host" clearable></el-input>
+                    <el-input v-model="sessionForm.host" clearable class="sessionLable"></el-input>
                 </el-form-item>
                 <el-form-item label="Username" prop="username">
-                    <el-input v-model="sessionForm.username" clearable></el-input>
+                    <el-input v-model="sessionForm.username" clearable class="sessionLable"></el-input>
                 </el-form-item>
                 <el-form-item label="Password" prop="password">
-                    <el-input v-model="sessionForm.password" show-password clearable></el-input>
+                    <el-input v-model="sessionForm.password" show-password clearable class="sessionLable"></el-input>
                 </el-form-item>
                 <el-form-item label="Port" prop="port">
-                    <el-input v-model.number="sessionForm.port"></el-input>
+                    <el-input v-model.number="sessionForm.port" class="sessionLable"></el-input>
                 </el-form-item>
             </el-form>
             <span slot="footer" class="dialog-footer">
@@ -2300,7 +2300,9 @@ export default {
                 this.$nextTick(() => {
                     let inputItems = document.querySelectorAll('.el-input__inner')
                     inputItems.forEach(item => {
-                        item.style.color = this.theme.foreground
+                        if (!item.parentNode.classList.contains('sessionLable')) {
+                            item.style.color = this.theme.foreground
+                        }
                     })
                     let textareaItems = document.querySelectorAll('.el-textarea__inner')
                     textareaItems.forEach(item => {
@@ -2348,7 +2350,9 @@ export default {
             this.$nextTick(() => {
                 let inputItems = document.querySelectorAll('.el-input__inner')
                 inputItems.forEach(item => {
-                    item.style.color = this.theme.foreground
+                    if (!item.parentNode.classList.contains('sessionLable')) {
+                        item.style.color = this.theme.foreground
+                    }
                 })
                 let textareaItems = document.querySelectorAll('.el-textarea__inner')
                 textareaItems.forEach(item => {
