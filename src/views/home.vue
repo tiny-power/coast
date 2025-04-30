@@ -481,10 +481,12 @@
                                 highlight-current-row
                                 empty-text=" "
                             >
-                                <el-table-column label="Server/Local file" prop="local"> </el-table-column>
+                                <el-table-column label="Server/Local file" prop="local" :show-overflow-tooltip="true">
+                                </el-table-column>
                                 <el-table-column label="Direction" prop="direction" width="80" align="center">
                                 </el-table-column>
-                                <el-table-column label="Remote file" prop="remote"> </el-table-column>
+                                <el-table-column label="Remote file" prop="remote" :show-overflow-tooltip="true">
+                                </el-table-column>
                                 <el-table-column label="Size" prop="size" width="136"> </el-table-column>
                                 <el-table-column label="Progress" prop="progress" width="160">
                                     <template slot-scope="scope">
@@ -514,10 +516,12 @@
                                 highlight-current-row
                                 empty-text=" "
                             >
-                                <el-table-column label="Server/Local file" prop="local"> </el-table-column>
+                                <el-table-column label="Server/Local file" prop="local" :show-overflow-tooltip="true">
+                                </el-table-column>
                                 <el-table-column label="Direction" prop="direction" width="80" align="center">
                                 </el-table-column>
-                                <el-table-column label="Remote file" prop="remote"> </el-table-column>
+                                <el-table-column label="Remote file" prop="remote" :show-overflow-tooltip="true">
+                                </el-table-column>
                                 <el-table-column label="Size" prop="size" width="136"> </el-table-column>
                                 <el-table-column label="Time" prop="time" width="136"> </el-table-column>
                                 <el-table-column label="Reason" prop="reason"> </el-table-column>
@@ -539,10 +543,12 @@
                                 highlight-current-row
                                 empty-text=" "
                             >
-                                <el-table-column label="Server/Local file" prop="local"> </el-table-column>
+                                <el-table-column label="Server/Local file" prop="local" :show-overflow-tooltip="true">
+                                </el-table-column>
                                 <el-table-column label="Direction" prop="direction" width="80" align="center">
                                 </el-table-column>
-                                <el-table-column label="Remote file" prop="remote"> </el-table-column>
+                                <el-table-column label="Remote file" prop="remote" :show-overflow-tooltip="true">
+                                </el-table-column>
                                 <el-table-column label="Size" prop="size" width="136"> </el-table-column>
                                 <el-table-column label="Time" prop="time" width="136"> </el-table-column>
                             </el-table>
