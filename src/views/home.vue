@@ -183,10 +183,25 @@
                     height: clientHeight - 110 + 'px',
                     display: 'flex',
                     'justify-content': 'center',
-                    'align-items': 'center'
+                    'align-items': 'center',
+                    'flex-direction': 'column'
                 }"
             >
-                <el-empty description="No host available"></el-empty>
+                <div class="profile">
+                    <div>
+                        <img :src="require('@/assets/icon.png')" width="60px" height="60px" />
+                    </div>
+                    <div style="font-size: 24px; color: #272727; margin: 15px 0px 5px 0px; font-weight: bold">
+                        Welcome to Coast
+                    </div>
+                    <div style="font-size: 15px; margin-top: 5px; color: #606266; width: 405px; text-align: center">
+                        Connect to a new host via SSH. Once you've added hosts, you'll find them here.
+                    </div>
+                    <div style="margin-top: 25px">
+                        <el-button type="primary" size="medium" @click="handleCommand('shell')">Local Shell</el-button>
+                        <el-button size="medium" @click="handleCommand('ssh')">Add New SSH</el-button>
+                    </div>
+                </div>
             </div>
         </div>
         <div v-show="classify === 'SFTP'">
@@ -2569,6 +2584,17 @@ export default {
     -webkit-app-region: drag;
     display: flex;
     align-items: center;
+}
+
+.profile {
+    border-radius: 8px;
+    width: 875px;
+    height: 650px;
+    color: #272727;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
 }
 
 ::v-deep .el-dropdown-menu__item:hover {
