@@ -774,7 +774,11 @@
                         <div :style="{ height: clientHeight - 180 + 'px', overflow: 'auto' }">
                             <el-form ref="snippetForm" :model="snippetForm" :rules="snippetRules" label-width="0px">
                                 <el-form-item prop="name">
-                                    <el-input v-model="snippetForm.name" placeholder="Action description"></el-input>
+                                    <el-input
+                                        v-model="snippetForm.name"
+                                        placeholder="Action description"
+                                        class="snippetLable"
+                                    ></el-input>
                                 </el-form-item>
                                 <el-form-item prop="script">
                                     <el-input
@@ -819,7 +823,11 @@
                         <div :style="{ height: clientHeight - 180 + 'px', overflow: 'auto' }">
                             <el-form ref="snippetForm" :model="snippetForm" :rules="snippetRules" label-width="0px">
                                 <el-form-item prop="name">
-                                    <el-input v-model="snippetForm.name" placeholder="Action description"></el-input>
+                                    <el-input
+                                        v-model="snippetForm.name"
+                                        placeholder="Action description"
+                                        class="snippetLable"
+                                    ></el-input>
                                 </el-form-item>
                                 <el-form-item prop="script">
                                     <el-input
@@ -874,16 +882,16 @@
         <el-dialog title="Info" :visible.sync="showAddSession" width="500px">
             <el-form ref="sessionForm" :model="sessionForm" :rules="sessionRules">
                 <el-form-item label="Host Name(or IP address)" prop="host">
-                    <el-input v-model="sessionForm.host" clearable class="sessionLable"></el-input>
+                    <el-input v-model="sessionForm.host" clearable></el-input>
                 </el-form-item>
                 <el-form-item label="Username" prop="username">
-                    <el-input v-model="sessionForm.username" clearable class="sessionLable"></el-input>
+                    <el-input v-model="sessionForm.username" clearable></el-input>
                 </el-form-item>
                 <el-form-item label="Password" prop="password">
-                    <el-input v-model="sessionForm.password" show-password clearable class="sessionLable"></el-input>
+                    <el-input v-model="sessionForm.password" show-password clearable></el-input>
                 </el-form-item>
                 <el-form-item label="Port" prop="port">
-                    <el-input v-model.number="sessionForm.port" class="sessionLable"></el-input>
+                    <el-input v-model.number="sessionForm.port"></el-input>
                 </el-form-item>
             </el-form>
             <span slot="footer" class="dialog-footer">
@@ -894,19 +902,19 @@
         <el-dialog title="Info" :visible.sync="showEditSession" width="500px">
             <el-form ref="sessionForm" :model="sessionForm" :rules="sessionRules">
                 <el-form-item label="Label">
-                    <el-input v-model="sessionForm.label" clearable class="sessionLable"></el-input>
+                    <el-input v-model="sessionForm.label" clearable></el-input>
                 </el-form-item>
                 <el-form-item label="Host Name(or IP address)" prop="host">
-                    <el-input v-model="sessionForm.host" clearable class="sessionLable"></el-input>
+                    <el-input v-model="sessionForm.host" clearable></el-input>
                 </el-form-item>
                 <el-form-item label="Username" prop="username">
-                    <el-input v-model="sessionForm.username" clearable class="sessionLable"></el-input>
+                    <el-input v-model="sessionForm.username" clearable></el-input>
                 </el-form-item>
                 <el-form-item label="Password" prop="password">
-                    <el-input v-model="sessionForm.password" show-password clearable class="sessionLable"></el-input>
+                    <el-input v-model="sessionForm.password" show-password clearable></el-input>
                 </el-form-item>
                 <el-form-item label="Port" prop="port">
-                    <el-input v-model.number="sessionForm.port" class="sessionLable"></el-input>
+                    <el-input v-model.number="sessionForm.port"></el-input>
                 </el-form-item>
             </el-form>
             <span slot="footer" class="dialog-footer">
@@ -2300,7 +2308,7 @@ export default {
                 this.$nextTick(() => {
                     let inputItems = document.querySelectorAll('.el-input__inner')
                     inputItems.forEach(item => {
-                        if (!item.parentNode.classList.contains('sessionLable')) {
+                        if (item.parentNode.classList.contains('snippetLable')) {
                             item.style.color = this.theme.foreground
                         }
                     })
@@ -2350,7 +2358,7 @@ export default {
             this.$nextTick(() => {
                 let inputItems = document.querySelectorAll('.el-input__inner')
                 inputItems.forEach(item => {
-                    if (!item.parentNode.classList.contains('sessionLable')) {
+                    if (item.parentNode.classList.contains('snippetLable')) {
                         item.style.color = this.theme.foreground
                     }
                 })
