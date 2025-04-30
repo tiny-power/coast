@@ -1064,12 +1064,12 @@ export default {
             list.forEach(dirent => {
                 const fullPath = path.join(dirPath, dirent.name)
                 if (dirent.isDirectory()) {
-                    folderList.push(fullPath.replace(rootPath, this.curRemotePath))
+                    folderList.push(fullPath.replace(rootPath, this.curRemotePath).replace(/\\/g, '/'))
                     let result = this.readLocalDirRecursively(fullPath, rootPath)
                     fileList = fileList.concat(result.fileList)
                     folderList = folderList.concat(result.folderList)
                 } else {
-                    fileList.push(fullPath.replace(rootPath, this.curRemotePath))
+                    fileList.push(fullPath.replace(rootPath, this.curRemotePath).replace(/\\/g, '/'))
                 }
             })
             return { folderList: folderList, fileList: fileList }
@@ -1088,7 +1088,7 @@ export default {
             let fileList = []
             for (let i = 0; i < list.length; i++) {
                 let row = list[i]
-                const fullPath = path.join(dirPath, row.filename)
+                const fullPath = dirPath + '/' + row.filename
                 if (row.attrs.isDirectory()) {
                     folderList.push(fullPath.replace(rootPath, this.curLocalPath))
                     let result = await this.readRemoteDirRecursively(fullPath, rootPath)
@@ -1130,9 +1130,9 @@ export default {
             //     this.$refs.multipleTable.toggleRowSelection(row, true)
             // }
         },
-        mkdirLocalFolder(newFolderList) {
+        mkdirRemoteFolder(newFolderList) {
             return new Promise((resolve, reject) => {
-                this.conn.exec('mkdir ' + newFolderList.join(' '), (err, stream) => {
+                this.conn.exec('mkdir -p ' + newFolderList.join(' '), (err, stream) => {
                     if (err) {
                         reject()
                     } else {
@@ -1212,16 +1212,17 @@ export default {
                     let folderList = result.folderList
                     let fileList = result.fileList
                     folderList.unshift(
-                        path
-                            .join(this.curLocalPath, this.contextmenuItem.name)
-                            .replace(this.curLocalPath, this.curRemotePath)
+                        (this.curLocalPath + '/' + this.contextmenuItem.name).replace(
+                            this.curLocalPath,
+                            this.curRemotePath
+                        )
                     )
                     let length = Math.ceil(folderList.length / 500)
                     const limit = pLimit(5)
                     const input = []
                     for (let j = 0; j < length; j++) {
                         let newFolderList = folderList.slice(j * 500, (j + 1) * 500)
-                        input.push(limit(() => this.mkdirLocalFolder(newFolderList)))
+                        input.push(limit(() => this.mkdirRemoteFolder(newFolderList)))
                     }
                     await Promise.all(input)
                     const fileLimit = pLimit(5)
@@ -1243,7 +1244,7 @@ export default {
                     console.log('Upload Success')
                 } else if (this.contextmenuItem.kind === 'file') {
                     const localFile = path.join(this.curLocalPath, this.contextmenuItem.name)
-                    const remoteFile = path.join(this.curRemotePath, path.basename(localFile))
+                    const remoteFile = this.curRemotePath + '/' + path.basename(localFile)
                     this.queuedFiles = this.queuedFiles + 1
                     this.queuedFilesObject[localFile] = {
                         local: localFile,
@@ -1346,7 +1347,7 @@ export default {
                 }
             } else if (action === 'delete') {
                 if (this.contextmenuItem.kind === 'folder') {
-                    fs.rmdir(
+                    fs.rm(
                         path.join(this.curLocalPath, this.contextmenuItem.name),
                         { recursive: true, force: true },
                         err => {
@@ -1382,7 +1383,7 @@ export default {
             } else if (action === 'Create directory and enter it') {
             }
         },
-        mkdirRemoteFolder(newFolderList) {
+        mkdirLocalFolder(newFolderList) {
             shell.mkdir('-p', newFolderList)
         },
         fastGet(file, curRemotePath, curLocalPath) {
@@ -1439,15 +1440,16 @@ export default {
             if (action === 'download') {
                 if (this.contextmenuItem.kind === 'folder') {
                     const result = await this.readRemoteDirRecursively(
-                        path.join(this.curRemotePath, this.contextmenuItem.name),
+                        this.curRemotePath + '/' + this.contextmenuItem.name,
                         this.curRemotePath
                     )
                     let folderList = result.folderList
                     let fileList = result.fileList
                     folderList.unshift(
-                        path
-                            .join(this.curRemotePath, this.contextmenuItem.name)
-                            .replace(this.curRemotePath, this.curLocalPath)
+                        (this.curRemotePath + '/' + this.contextmenuItem.name).replace(
+                            this.curRemotePath,
+                            this.curLocalPath
+                        )
                     )
 
                     let length = Math.ceil(folderList.length / 500)
@@ -1455,7 +1457,7 @@ export default {
                     const input = []
                     for (let j = 0; j < length; j++) {
                         let newFolderList = folderList.slice(j * 500, (j + 1) * 500)
-                        input.push(limit(() => this.mkdirRemoteFolder(newFolderList)))
+                        input.push(limit(() => this.mkdirLocalFolder(newFolderList)))
                     }
                     await Promise.all(input)
                     let localRowData = this.getLocalDir(this.curLocalPath)
@@ -1480,7 +1482,7 @@ export default {
                     await Promise.all(fileInput)
                     console.log('Upload Success')
                 } else if (this.contextmenuItem.kind === 'file') {
-                    const remoteFile = path.join(this.curRemotePath, this.contextmenuItem.name)
+                    const remoteFile = this.curRemotePath + '/' + this.contextmenuItem.name
                     const localFile = path.join(this.curLocalPath, path.basename(remoteFile))
                     this.queuedFiles = this.queuedFiles + 1
                     this.queuedFilesObject[localFile] = {
@@ -1543,25 +1545,22 @@ export default {
                 }
             } else if (action === 'delete') {
                 if (this.contextmenuItem.kind === 'folder') {
-                    this.conn.exec(
-                        'rm -rf ' + path.join(this.curRemotePath, this.contextmenuItem.name),
-                        (err, stream) => {
-                            if (err) throw err
-                            stream
-                                .on('close', (code, signal) => {
-                                    this.updateSftp()
-                                })
-                                .on('data', data => {
-                                    t
-                                    console.log('STDOUT:', data.toString())
-                                })
-                                .stderr.on('data', data => {
-                                    console.error('STDERR:', data.toString())
-                                })
-                        }
-                    )
+                    this.conn.exec('rm -rf ' + this.curRemotePath + '/' + this.contextmenuItem.name, (err, stream) => {
+                        if (err) throw err
+                        stream
+                            .on('close', (code, signal) => {
+                                this.updateSftp()
+                            })
+                            .on('data', data => {
+                                t
+                                console.log('STDOUT:', data.toString())
+                            })
+                            .stderr.on('data', data => {
+                                console.error('STDERR:', data.toString())
+                            })
+                    })
                 } else if (this.contextmenuItem.kind === 'file' || this.contextmenuItem.kind === 'link') {
-                    this.sftp.unlink(path.join(this.curRemotePath, this.contextmenuItem.name), err => {
+                    this.sftp.unlink(this.curRemotePath + '/' + this.contextmenuItem.name, err => {
                         if (err) {
                             console.error('Delete Error:', err)
                         } else {
@@ -1978,8 +1977,8 @@ export default {
         },
         remoteRowDoubleClicked(row, column, cell, event) {
             if (row.kind === 'folder') {
-                this.curRemotePath = path.join(this.curRemotePath, row.name)
-                this.remotePath = path.dirname(path.join(this.curRemotePath, row.name))
+                this.curRemotePath = this.curRemotePath + '/' + row.name
+                this.remotePath = path.dirname(this.curRemotePath + '/' + row.name)
                 this.sftp.readdir(this.curRemotePath, (err, list) => {
                     if (err) {
                         return
