@@ -223,7 +223,7 @@
                         style="min-width: 700px"
                     >
                         <template slot-scope="{ item }">
-                            {{ item.host }}
+                            {{ item.label ? item.host + ' (' + item.label + ')' : item.host }}
                         </template>
                     </el-autocomplete>
                 </div>
@@ -893,6 +893,9 @@
         </el-dialog>
         <el-dialog title="Info" :visible.sync="showEditSession" width="500px">
             <el-form ref="sessionForm" :model="sessionForm" :rules="sessionRules">
+                <el-form-item label="Label">
+                    <el-input v-model="sessionForm.label" clearable></el-input>
+                </el-form-item>
                 <el-form-item label="Host Name(or IP address)" prop="host">
                     <el-input v-model="sessionForm.host" clearable></el-input>
                 </el-form-item>
@@ -966,6 +969,7 @@ export default {
             menuLeft: 0,
             showAddSession: false,
             sessionForm: {
+                label: '',
                 host: '',
                 username: '',
                 password: '',
@@ -1750,7 +1754,10 @@ export default {
         },
         createFilter(queryString) {
             return session => {
-                return session.host.toLowerCase().indexOf(queryString.toLowerCase()) === 0
+                return (
+                    session.label.toLowerCase().indexOf(queryString.toLowerCase()) === 0 ||
+                    session.host.toLowerCase().indexOf(queryString.toLowerCase()) === 0
+                )
             }
         },
         queryLocalSearch(queryString, cb) {
@@ -2235,8 +2242,10 @@ export default {
         async handleUpdateSession() {
             this.$refs.sessionForm.validate(async valid => {
                 if (valid) {
-                    let sql = 'UPDATE session SET host = ?, port = ?, username = ?, password = ? WHERE id = ?'
+                    let sql =
+                        'UPDATE session SET label = ?, host = ?, port = ?, username = ?, password = ? WHERE id = ?'
                     let result = await window.ipcRenderer.invoke('db_update', sql, [
+                        this.sessionForm.label,
                         this.sessionForm.host,
                         this.sessionForm.port,
                         this.sessionForm.username,
