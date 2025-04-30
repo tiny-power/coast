@@ -218,7 +218,7 @@
                     <el-autocomplete
                         v-model="search"
                         :fetch-suggestions="querySearch"
-                        placeholder="Search hosts"
+                        placeholder="Select from your saved Hosts"
                         @select="handleSelect"
                         style="min-width: 700px"
                     >
@@ -258,6 +258,7 @@
                                 size="small"
                                 style="width: 100%"
                                 @change="localPathChange"
+                                class="autocomplete"
                             >
                                 <template slot-scope="{ item }">
                                     {{ item }}
@@ -379,6 +380,7 @@
                                 size="small"
                                 style="width: 100%"
                                 @change="remotePathChange"
+                                class="autocomplete"
                             >
                                 <template slot-scope="{ item }">
                                     {{ item }}
@@ -484,7 +486,16 @@
                                 </el-table-column>
                                 <el-table-column label="Remote file" prop="remote"> </el-table-column>
                                 <el-table-column label="Size" prop="size" width="136"> </el-table-column>
-                                <el-table-column label="Status" prop="status" width="136"> </el-table-column>
+                                <el-table-column label="Progress" prop="progress" width="160">
+                                    <template slot-scope="scope">
+                                        <el-progress
+                                            :text-inside="true"
+                                            :stroke-width="18"
+                                            :percentage="scope.row.progress"
+                                            status="success"
+                                        ></el-progress>
+                                    </template>
+                                </el-table-column>
                             </el-table>
                         </el-tab-pane>
                         <el-tab-pane
@@ -1093,31 +1104,31 @@ export default {
             this.selectedRows = selection
         },
         handleRowClick(row, column, event) {
-            if (event.ctrlKey) {
-                this.toggleRowSelection(row)
-            } else {
-                this.$refs.multipleTable.clearSelection()
-                this.$refs.multipleTable.toggleRowSelection(row)
-            }
+            // if (event.ctrlKey) {
+            //     this.toggleRowSelection(row)
+            // } else {
+            //     this.$refs.multipleTable.clearSelection()
+            //     this.$refs.multipleTable.toggleRowSelection(row)
+            // }
         },
         handleCellClick(row, column, cell, event) {
-            if (event.ctrlKey) {
-                this.toggleRowSelection(row)
-            } else {
-                this.$refs.multipleTable.clearSelection()
-                this.$refs.multipleTable.toggleRowSelection(row)
-            }
+            // if (event.ctrlKey) {
+            //     this.toggleRowSelection(row)
+            // } else {
+            //     this.$refs.multipleTable.clearSelection()
+            //     this.$refs.multipleTable.toggleRowSelection(row)
+            // }
         },
         toggleRowSelection(row) {
-            const selected = this.selectedRows.includes(row)
-            if (selected) {
-                const index = this.selectedRows.findIndex(d => d.id === row.id)
-                this.selectedRows.splice(index, 1)
-                this.$refs.multipleTable.toggleRowSelection(row, false)
-            } else {
-                this.selectedRows.push({ ...row })
-                this.$refs.multipleTable.toggleRowSelection(row, true)
-            }
+            // const selected = this.selectedRows.includes(row)
+            // if (selected) {
+            //     const index = this.selectedRows.findIndex(d => d.id === row.id)
+            //     this.selectedRows.splice(index, 1)
+            //     this.$refs.multipleTable.toggleRowSelection(row, false)
+            // } else {
+            //     this.selectedRows.push({ ...row })
+            //     this.$refs.multipleTable.toggleRowSelection(row, true)
+            // }
         },
         mkdirLocalFolder(newFolderList) {
             return new Promise((resolve, reject) => {
@@ -1150,6 +1161,13 @@ export default {
                     {
                         step: (total_transferred, chunk, total) => {
                             //console.log(total_transferred, chunk, total)
+                            this.queuedFilesObject[localFile] = {
+                                local: localFile,
+                                remote: file,
+                                direction: '-->>',
+                                progress: Math.floor((total_transferred / total) * 100)
+                            }
+                            this.queuedFilesList = Object.values(this.queuedFilesObject)
                         }
                     },
                     err => {
@@ -1215,7 +1233,8 @@ export default {
                         this.queuedFilesObject[fileList[i].replace(curRemotePath, curLocalPath)] = {
                             local: fileList[i].replace(curRemotePath, curLocalPath),
                             remote: fileList[i],
-                            direction: '-->>'
+                            direction: '-->>',
+                            progress: 0
                         }
                         this.queuedFilesList = Object.values(this.queuedFilesObject)
                         fileInput.push(limit(() => this.fastPut(fileList[i], curRemotePath, curLocalPath)))
@@ -1230,7 +1249,8 @@ export default {
                         local: localFile,
                         remote: remoteFile,
                         direction: '-->>',
-                        size: this.contextmenuItem.size
+                        size: this.contextmenuItem.size,
+                        progress: 0
                     }
                     this.queuedFilesList = Object.values(this.queuedFilesObject)
                     this.sftp.fastPut(
@@ -1239,6 +1259,14 @@ export default {
                         {
                             step: (total_transferred, chunk, total) => {
                                 //console.log(total_transferred, chunk, total)
+                                this.queuedFilesObject[localFile] = {
+                                    local: localFile,
+                                    remote: remoteFile,
+                                    direction: '-->>',
+                                    size: this.contextmenuItem.size,
+                                    progress: Math.floor((total_transferred / total) * 100)
+                                }
+                                this.queuedFilesList = Object.values(this.queuedFilesObject)
                             }
                         },
                         err => {
@@ -1366,6 +1394,13 @@ export default {
                     {
                         step: (total_transferred, chunk, total) => {
                             //console.log(total_transferred, chunk, total)
+                            this.queuedFilesObject[file] = {
+                                local: file,
+                                remote: remoteFile,
+                                direction: '<<--',
+                                progress: Math.floor((total_transferred / total) * 100)
+                            }
+                            this.queuedFilesList = Object.values(this.queuedFilesObject)
                         }
                     },
                     err => {
@@ -1436,7 +1471,8 @@ export default {
                         this.queuedFilesObject[fileList[i]] = {
                             local: fileList[i],
                             remote: fileList[i].replace(curLocalPath, curRemotePath),
-                            direction: '<<--'
+                            direction: '<<--',
+                            progress: 0
                         }
                         this.queuedFilesList = Object.values(this.queuedFilesObject)
                         fileInput.push(limit(() => this.fastGet(fileList[i], curRemotePath, curLocalPath)))
@@ -1451,7 +1487,8 @@ export default {
                         local: localFile,
                         remote: remoteFile,
                         direction: '<<--',
-                        size: this.contextmenuItem.size
+                        size: this.contextmenuItem.size,
+                        progress: 0
                     }
                     this.queuedFilesList = Object.values(this.queuedFilesObject)
                     this.sftp.fastGet(
@@ -1460,6 +1497,14 @@ export default {
                         {
                             step: (total_transferred, chunk, total) => {
                                 //console.log(total_transferred, chunk, total)
+                                this.queuedFilesObject[localFile] = {
+                                    local: localFile,
+                                    remote: remoteFile,
+                                    direction: '<<--',
+                                    size: this.contextmenuItem.size,
+                                    progress: Math.floor((total_transferred / total) * 100)
+                                }
+                                this.queuedFilesList = Object.values(this.queuedFilesObject)
                             }
                         },
                         err => {
@@ -2832,5 +2877,12 @@ li:hover {
 }
 ::v-deep .el-tabs--border-card > .el-tabs__content {
     padding: 0px;
+}
+::v-deep .autocomplete .el-input__inner {
+    border-radius: 0px;
+    border-left: 2px solid #dcdfe6;
+    border-top: none;
+    border-bottom: none;
+    border-right: none;
 }
 </style>
