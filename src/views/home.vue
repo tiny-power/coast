@@ -194,7 +194,6 @@
                 :style="{
                     background: '#f7f9fa',
                     height: clientHeight - 50 + 'px',
-                    overflow: 'auto',
                     'box-sizing': 'border-box',
                     display: 'flex',
                     'flex-direction': 'column'
@@ -266,7 +265,7 @@
                                 row-key="name"
                             >
                                 <template slot="empty">
-                                    <div :style="{ height: clientHeight - 360 + 'px' }">
+                                    <div style="height: 100%">
                                         <el-empty description="No Rows To Show"></el-empty>
                                     </div>
                                 </template>
@@ -382,7 +381,7 @@
                                 highlight-current-row
                             >
                                 <template slot="empty">
-                                    <div :style="{ height: clientHeight - 360 + 'px' }">
+                                    <div style="height: 100%">
                                         <el-empty description="No Rows To Show"></el-empty>
                                     </div>
                                 </template>
@@ -1022,6 +1021,10 @@ export default {
                     tab.stream.close()
                 }
             }
+        })
+        window.addEventListener('resize', () => {
+            this.clientWidth = document.documentElement.clientWidth || document.body.clientWidth
+            this.clientHeight = document.documentElement.clientHeight || document.body.clientHeight
         })
         this.querySnippetAll()
         this.querySessionAll()
