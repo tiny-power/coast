@@ -2557,7 +2557,7 @@ export default {
             item.xterm = new Terminal({
                 cursorBlink: this.platform === 'win32' ? true : false,
                 cursorStyle: this.platform === 'win32' ? 'underline' : 'block',
-                fontFamily: 'SourceCodePro',
+                fontFamily: this.platform === 'win32' ? 'SourceCodePro' : '',
                 fontSize: 14,
                 lineHeight: 1.2,
                 theme: this.theme
