@@ -1,2 +1,2 @@
 # coast
-A Modern GUI For Terminal
+Open-sourced terminal/ssh/sftp client(linux, mac, win).
