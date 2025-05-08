@@ -925,6 +925,14 @@
                 <el-button type="primary" @click="handleUpdateSession">Confirm</el-button>
             </span>
         </el-dialog>
+        <el-dialog title="Activate License" :visible.sync="licenseVisible" center>
+            <div style="margin-top: 20px">
+                <el-input placeholder="XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX" v-model="licenseKey" clearable> </el-input>
+            </div>
+            <span slot="footer" class="dialog-footer" style="margin-top: 20px">
+                <el-button type="primary" size="medium" @click="handleLicenseKey">Activate</el-button>
+            </span>
+        </el-dialog>
     </div>
 </template>
 
@@ -1036,10 +1044,14 @@ export default {
             isLocalMenuVisible: false,
             isRemoteMenuVisible: false,
             selectedRows: [],
-            limit: null
+            limit: null,
+            isPay: false,
+            licenseVisible: false,
+            licenseKey: ''
         }
     },
     mounted() {
+        this.isPay = localStorage.getItem('isPay') || false
         let themeName = localStorage.getItem('theme') || 'Monokai'
         localStorage.setItem('theme', themeName)
         let settingFlag = localStorage.getItem('settingFlag')
@@ -1077,6 +1089,25 @@ export default {
         this.getHome()
     },
     methods: {
+        handleLicenseKey() {
+            if (this.licenseKey) {
+                const client = new ClientJS()
+                const params = {
+                    product_id: 'Coast',
+                    client_id: client.getFingerprint(),
+                    license_code: this.licenseKey
+                }
+                this.$axios.get('verification_license', { params }).then(res => {
+                    if (res.data.code == 200) {
+                        this.isPay = true
+                        localStorage.setItem('isPay', true)
+                        this.licenseVisible = false
+                    } else {
+                        this.$message.error(res.data.msg)
+                    }
+                })
+            }
+        },
         readLocalDirRecursively(dirPath, rootPath) {
             let folderList = []
             let fileList = []
@@ -1179,19 +1210,21 @@ export default {
                 })
             })
         },
-        fastPut(file, curRemotePath, curLocalPath) {
+        fastPut(localFile, remoteFile, isRefresh) {
             return new Promise((resolve, reject) => {
-                let localFile = file.replace(curRemotePath, curLocalPath)
+                let size = '--'
                 this.sftp.fastPut(
                     localFile,
-                    file,
+                    remoteFile,
                     {
                         step: (total_transferred, chunk, total) => {
                             //console.log(total_transferred, chunk, total)
+                            size = filesize(total, { standard: 'jedec' })
                             this.queuedFilesObject[localFile] = {
                                 local: localFile,
-                                remote: file,
+                                remote: remoteFile,
                                 direction: '-->>',
+                                size: size,
                                 progress: Math.floor((total_transferred / total) * 100)
                             }
                             this.queuedFilesList = Object.values(this.queuedFilesObject)
@@ -1205,24 +1238,73 @@ export default {
                             this.failedTransfers = this.failedTransfers + 1
                             this.failedTransfersObject[localFile] = {
                                 local: localFile,
-                                remote: file,
+                                remote: remoteFile,
                                 direction: '-->>',
                                 time: dayjs().format('M/D/YY H:m A'),
+                                size: size,
                                 reason: err.toString()
                             }
                             this.failedTransfersList = Object.values(this.failedTransfersObject)
                             console.error('Upload Error:', err)
                             reject()
                         } else {
-                            // console.log('Upload Success:', file)
+                            // console.log('Upload Success:', remoteFile)
                             this.successfulTransfers = this.successfulTransfers + 1
                             this.successfulTransfersObject[localFile] = {
                                 local: localFile,
-                                remote: file,
+                                remote: remoteFile,
                                 direction: '-->>',
+                                size: size,
                                 time: dayjs().format('M/D/YY H:m A')
                             }
                             this.successfulTransfersList = Object.values(this.successfulTransfersObject)
+                            if (isRefresh) {
+                                if (this.sftp) {
+                                    this.sftp.readdir(this.curRemotePath, (err, list) => {
+                                        if (err) {
+                                            return
+                                        }
+                                        let remoteRowData = [
+                                            {
+                                                kind: '',
+                                                name: '..'
+                                            }
+                                        ]
+                                        for (let i = 0; i < list.length; i++) {
+                                            let row = list[i]
+                                            let kind = row.longname.substring(0, 1)
+                                            if (kind === '-') {
+                                                kind = 'file'
+                                            } else if (kind === 'd') {
+                                                kind = 'folder'
+                                            } else if (kind === 'p') {
+                                                kind = 'FIFO'
+                                            } else if (kind === 'l') {
+                                                kind = 'link'
+                                            } else if (kind === 'b') {
+                                                kind = 'block'
+                                            } else if (kind === 'c') {
+                                                kind = 'character'
+                                            } else if (kind === 's') {
+                                                kind = 'socket'
+                                            } else {
+                                                kind = 'other'
+                                            }
+                                            remoteRowData.push({
+                                                name: row.filename,
+                                                size:
+                                                    kind === 'file'
+                                                        ? filesize(row.attrs.size, { standard: 'jedec' })
+                                                        : '--',
+                                                kind: kind,
+                                                modifiedTime: dayjs.unix(row.attrs.mtime).format('M/D/YY H:m A'),
+                                                permissions: row.longname.substring(0, 11)
+                                            })
+                                        }
+                                        this.remoteRowData = remoteRowData
+                                    })
+                                }
+                            }
                             resolve()
                         }
                     }
@@ -1231,6 +1313,10 @@ export default {
         },
         async menuLocalAction(action) {
             if (action === 'upload') {
+                const fileLimit = pLimit(2)
+                const fileInput = []
+                let curRemotePath = this.curRemotePath
+                let curLocalPath = this.curLocalPath
                 for (let i = 0; i < this.selectedRows.length; i++) {
                     let selectedRow = this.selectedRows[i]
                     if (selectedRow.kind === 'folder') {
@@ -1251,11 +1337,7 @@ export default {
                             input.push(limit(() => this.mkdirRemoteFolder(newFolderList)))
                         }
                         await Promise.all(input)
-                        const fileLimit = pLimit(5)
-                        const fileInput = []
                         this.queuedFiles = this.queuedFiles + fileList.length
-                        let curRemotePath = this.curRemotePath
-                        let curLocalPath = this.curLocalPath
                         for (let i = 0; i < fileList.length; i++) {
                             this.queuedFilesObject[fileList[i].replace(curRemotePath, curLocalPath)] = {
                                 local: fileList[i].replace(curRemotePath, curLocalPath),
@@ -1264,10 +1346,9 @@ export default {
                                 progress: 0
                             }
                             this.queuedFilesList = Object.values(this.queuedFilesObject)
-                            fileInput.push(limit(() => this.fastPut(fileList[i], curRemotePath, curLocalPath)))
+                            let localFile = fileList[i].replace(curRemotePath, curLocalPath)
+                            fileInput.push(fileLimit(() => this.fastPut(localFile, fileList[i], false)))
                         }
-                        await Promise.all(fileInput)
-                        console.log('Upload Success')
                     } else if (selectedRow.kind === 'file') {
                         const localFile = path.join(this.curLocalPath, selectedRow.name)
                         const remoteFile = this.curRemotePath + '/' + path.basename(localFile)
@@ -1280,97 +1361,11 @@ export default {
                             progress: 0
                         }
                         this.queuedFilesList = Object.values(this.queuedFilesObject)
-                        this.sftp.fastPut(
-                            localFile,
-                            remoteFile,
-                            {
-                                step: (total_transferred, chunk, total) => {
-                                    this.queuedFilesObject[localFile] = {
-                                        local: localFile,
-                                        remote: remoteFile,
-                                        direction: '-->>',
-                                        size: selectedRow.size,
-                                        progress: Math.floor((total_transferred / total) * 100)
-                                    }
-                                    this.queuedFilesList = Object.values(this.queuedFilesObject)
-                                }
-                            },
-                            err => {
-                                this.queuedFiles = this.queuedFiles - 1
-                                this.$delete(this.queuedFilesObject, localFile)
-                                this.queuedFilesList = Object.values(this.queuedFilesObject)
-                                if (err) {
-                                    this.failedTransfers = this.failedTransfers + 1
-                                    this.failedTransfersObject[localFile] = {
-                                        local: localFile,
-                                        remote: remoteFile,
-                                        direction: '-->>',
-                                        time: dayjs().format('M/D/YY H:m A'),
-                                        size: selectedRow.size,
-                                        reason: err.toString()
-                                    }
-                                    this.failedTransfersList = Object.values(this.failedTransfersObject)
-                                    console.error('Upload Error:', err)
-                                } else {
-                                    this.successfulTransfers = this.successfulTransfers + 1
-                                    this.successfulTransfersObject[localFile] = {
-                                        local: localFile,
-                                        remote: remoteFile,
-                                        direction: '-->>',
-                                        time: dayjs().format('M/D/YY H:m A'),
-                                        size: selectedRow.size
-                                    }
-                                    this.successfulTransfersList = Object.values(this.successfulTransfersObject)
-                                    if (this.sftp) {
-                                        this.sftp.readdir(this.curRemotePath, (err, list) => {
-                                            if (err) {
-                                                return
-                                            }
-                                            let remoteRowData = [
-                                                {
-                                                    kind: '',
-                                                    name: '..'
-                                                }
-                                            ]
-                                            for (let i = 0; i < list.length; i++) {
-                                                let row = list[i]
-                                                let kind = row.longname.substring(0, 1)
-                                                if (kind === '-') {
-                                                    kind = 'file'
-                                                } else if (kind === 'd') {
-                                                    kind = 'folder'
-                                                } else if (kind === 'p') {
-                                                    kind = 'FIFO'
-                                                } else if (kind === 'l') {
-                                                    kind = 'link'
-                                                } else if (kind === 'b') {
-                                                    kind = 'block'
-                                                } else if (kind === 'c') {
-                                                    kind = 'character'
-                                                } else if (kind === 's') {
-                                                    kind = 'socket'
-                                                } else {
-                                                    kind = 'other'
-                                                }
-                                                remoteRowData.push({
-                                                    name: row.filename,
-                                                    size:
-                                                        kind === 'file'
-                                                            ? filesize(row.attrs.size, { standard: 'jedec' })
-                                                            : '--',
-                                                    kind: kind,
-                                                    modifiedTime: dayjs.unix(row.attrs.mtime).format('M/D/YY H:m A'),
-                                                    permissions: row.longname.substring(0, 11)
-                                                })
-                                            }
-                                            this.remoteRowData = remoteRowData
-                                        })
-                                    }
-                                }
-                            }
-                        )
+                        fileInput.push(fileLimit(() => this.fastPut(localFile, remoteFile, true)))
                     }
                 }
+                await Promise.all(fileInput)
+                console.log('Upload Success')
             } else if (action === 'delete') {
                 for (let i = 0; i < this.selectedRows.length; i++) {
                     let selectedRow = this.selectedRows[i]
@@ -1411,19 +1406,21 @@ export default {
         mkdirLocalFolder(newFolderList) {
             shell.mkdir('-p', newFolderList)
         },
-        fastGet(file, curRemotePath, curLocalPath) {
+        fastGet(remoteFile, localFile, isRefresh) {
+            let size = '--'
             return new Promise((resolve, reject) => {
-                let remoteFile = file.replace(curLocalPath, curRemotePath)
                 this.sftp.fastGet(
                     remoteFile,
-                    file,
+                    localFile,
                     {
                         step: (total_transferred, chunk, total) => {
                             //console.log(total_transferred, chunk, total)
-                            this.queuedFilesObject[file] = {
-                                local: file,
+                            size = filesize(total, { standard: 'jedec' })
+                            this.queuedFilesObject[localFile] = {
+                                local: localFile,
                                 remote: remoteFile,
                                 direction: '<<--',
+                                size: size,
                                 progress: Math.floor((total_transferred / total) * 100)
                             }
                             this.queuedFilesList = Object.values(this.queuedFilesObject)
@@ -1431,30 +1428,38 @@ export default {
                     },
                     err => {
                         this.queuedFiles = this.queuedFiles - 1
-                        this.$delete(this.queuedFilesObject, file)
+                        this.$delete(this.queuedFilesObject, localFile)
                         this.queuedFilesList = Object.values(this.queuedFilesObject)
                         if (err) {
                             this.failedTransfers = this.failedTransfers + 1
-                            this.failedTransfersObject[file] = {
-                                local: file,
+                            this.failedTransfersObject[localFile] = {
+                                local: localFile,
                                 remote: remoteFile,
                                 direction: '<<--',
                                 time: dayjs().format('M/D/YY H:m A'),
+                                size: size,
                                 reason: err.toString()
                             }
                             this.failedTransfersList = Object.values(this.failedTransfersObject)
                             console.error('Upload Error:', err)
                             reject()
                         } else {
-                            // console.log('Upload Success:', file)
+                            // console.log('Upload Success:', localFile)
                             this.successfulTransfers = this.successfulTransfers + 1
-                            this.successfulTransfersObject[file] = {
-                                local: file,
+                            this.successfulTransfersObject[localFile] = {
+                                local: localFile,
                                 remote: remoteFile,
                                 direction: '<<--',
+                                size: size,
                                 time: dayjs().format('M/D/YY H:m A')
                             }
                             this.successfulTransfersList = Object.values(this.successfulTransfersObject)
+                            if (isRefresh) {
+                                let localRowData = this.getLocalDir(this.curLocalPath)
+                                if (localRowData.length != 0) {
+                                    this.localRowData = localRowData
+                                }
+                            }
                             resolve()
                         }
                     }
@@ -1463,6 +1468,10 @@ export default {
         },
         async menuRemoteAction(action) {
             if (action === 'download') {
+                const fileLimit = pLimit(2)
+                const fileInput = []
+                let curRemotePath = this.curRemotePath
+                let curLocalPath = this.curLocalPath
                 for (let i = 0; i < this.selectedRows.length; i++) {
                     let selectedRow = this.selectedRows[i]
                     if (selectedRow.kind === 'folder') {
@@ -1488,11 +1497,7 @@ export default {
                         if (localRowData.length != 0) {
                             this.localRowData = localRowData
                         }
-                        const fileLimit = pLimit(5)
-                        const fileInput = []
                         this.queuedFiles = this.queuedFiles + fileList.length
-                        let curRemotePath = this.curRemotePath
-                        let curLocalPath = this.curLocalPath
                         for (let i = 0; i < fileList.length; i++) {
                             this.queuedFilesObject[fileList[i]] = {
                                 local: fileList[i],
@@ -1501,10 +1506,9 @@ export default {
                                 progress: 0
                             }
                             this.queuedFilesList = Object.values(this.queuedFilesObject)
-                            fileInput.push(limit(() => this.fastGet(fileList[i], curRemotePath, curLocalPath)))
+                            let remoteFile = fileList[i].replace(curLocalPath, curRemotePath)
+                            fileInput.push(fileLimit(() => this.fastGet(remoteFile, fileList[i]), false))
                         }
-                        await Promise.all(fileInput)
-                        console.log('Upload Success')
                     } else if (selectedRow.kind === 'file') {
                         const remoteFile = this.curRemotePath + '/' + selectedRow.name
                         const localFile = path.join(this.curLocalPath, path.basename(remoteFile))
@@ -1517,57 +1521,11 @@ export default {
                             progress: 0
                         }
                         this.queuedFilesList = Object.values(this.queuedFilesObject)
-                        this.sftp.fastGet(
-                            remoteFile,
-                            localFile,
-                            {
-                                step: (total_transferred, chunk, total) => {
-                                    //console.log(total_transferred, chunk, total)
-                                    this.queuedFilesObject[localFile] = {
-                                        local: localFile,
-                                        remote: remoteFile,
-                                        direction: '<<--',
-                                        size: selectedRow.size,
-                                        progress: Math.floor((total_transferred / total) * 100)
-                                    }
-                                    this.queuedFilesList = Object.values(this.queuedFilesObject)
-                                }
-                            },
-                            err => {
-                                this.queuedFiles = this.queuedFiles - 1
-                                this.$delete(this.queuedFilesObject, localFile)
-                                this.queuedFilesList = Object.values(this.queuedFilesObject)
-                                if (err) {
-                                    this.failedTransfers = this.failedTransfers + 1
-                                    this.failedTransfersObject[localFile] = {
-                                        local: localFile,
-                                        remote: remoteFile,
-                                        direction: '<<--',
-                                        time: dayjs().format('M/D/YY H:m A'),
-                                        size: selectedRow.size,
-                                        reason: err.toString()
-                                    }
-                                    this.failedTransfersList = Object.values(this.failedTransfersObject)
-                                    console.error('Download Error:', err)
-                                } else {
-                                    this.successfulTransfers = this.successfulTransfers + 1
-                                    this.successfulTransfersObject[localFile] = {
-                                        local: localFile,
-                                        remote: remoteFile,
-                                        direction: '<<--',
-                                        time: dayjs().format('M/D/YY H:m A'),
-                                        size: selectedRow.size
-                                    }
-                                    this.successfulTransfersList = Object.values(this.successfulTransfersObject)
-                                    let localRowData = this.getLocalDir(this.curLocalPath)
-                                    if (localRowData.length != 0) {
-                                        this.localRowData = localRowData
-                                    }
-                                }
-                            }
-                        )
+                        fileInput.push(fileLimit(() => this.fastGet(remoteFile, localFile, true)))
                     }
                 }
+                await Promise.all(fileInput)
+                console.log('Upload Success')
             } else if (action === 'delete') {
                 for (let i = 0; i < this.selectedRows.length; i++) {
                     let selectedRow = this.selectedRows[i]
@@ -2204,9 +2162,14 @@ export default {
             if (command === 'shell') {
                 this.addTab('shell')
             } else if (command === 'ssh') {
-                this.showAddSession = true
-                if (this.$refs.sessionForm) {
-                    this.$refs.sessionForm.resetFields()
+                if (this.isPay || this.sessionList.length < 5) {
+                    this.showAddSession = true
+                    if (this.$refs.sessionForm) {
+                        this.$refs.sessionForm.resetFields()
+                    }
+                } else {
+                    this.licenseKey = ''
+                    this.licenseVisible = true
                 }
             }
         },
@@ -2358,23 +2321,28 @@ export default {
             item.xterm.focus()
         },
         handleNewSnippet() {
-            this.snippetForm = {
-                name: '',
-                script: ''
-            }
-            this.showAddSnippet = true
-            this.$nextTick(() => {
-                let inputItems = document.querySelectorAll('.el-input__inner')
-                inputItems.forEach(item => {
-                    if (item.parentNode.classList.contains('snippetLable')) {
+            if (this.isPay || this.snippetList.length < 5) {
+                this.snippetForm = {
+                    name: '',
+                    script: ''
+                }
+                this.showAddSnippet = true
+                this.$nextTick(() => {
+                    let inputItems = document.querySelectorAll('.el-input__inner')
+                    inputItems.forEach(item => {
+                        if (item.parentNode.classList.contains('snippetLable')) {
+                            item.style.color = this.theme.foreground
+                        }
+                    })
+                    let textareaItems = document.querySelectorAll('.el-textarea__inner')
+                    textareaItems.forEach(item => {
                         item.style.color = this.theme.foreground
-                    }
+                    })
                 })
-                let textareaItems = document.querySelectorAll('.el-textarea__inner')
-                textareaItems.forEach(item => {
-                    item.style.color = this.theme.foreground
-                })
-            })
+            } else {
+                this.licenseKey = ''
+                this.licenseVisible = true
+            }
         },
         async handleSaveSnippet() {
             this.$refs.snippetForm.validate(async valid => {
