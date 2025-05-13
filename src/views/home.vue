@@ -278,13 +278,19 @@
                                 ref="localMultipleTable"
                                 @row-click="handleLocalRowClick"
                                 row-key="name"
+                                @sort-change="localSortChange"
                             >
                                 <template slot="empty">
                                     <div style="height: 100%">
                                         <el-empty description="No Rows To Show"></el-empty>
                                     </div>
                                 </template>
-                                <el-table-column prop="name" label="Name" :show-overflow-tooltip="true">
+                                <el-table-column
+                                    prop="name"
+                                    label="Name"
+                                    :show-overflow-tooltip="true"
+                                    sortable="custom"
+                                >
                                     <template slot-scope="scope">
                                         <div style="display: flex; align-items: center">
                                             <img
@@ -293,27 +299,48 @@
                                                 height="20px"
                                                 v-if="scope.row.kind === 'folder' || scope.row.kind === ''"
                                             />
-                                            <img
-                                                :src="require('@/assets/file.png')"
-                                                width="20px"
-                                                height="20px"
+                                            <svg
+                                                viewBox="0 0 1024 1024"
+                                                version="1.1"
+                                                xmlns="http://www.w3.org/2000/svg"
+                                                width="20"
+                                                height="20"
                                                 v-if="scope.row.kind === 'file'"
-                                            />
+                                            >
+                                                <path
+                                                    d="M637.194862 113.714901l0 189.396581 182.346001 0L649.150148 113.714901 637.194862 113.714901zM816.682769 896.959605c6.27696-6.275937 10.255575-14.8318 10.255575-24.52865L826.938344 355.018689l-195.461717 0 0 0c-12.534478 0-24.489764-5.13802-32.467459-13.693884l0 0c-8.555863-7.985882-13.674441-19.391652-13.674441-32.515554L585.334727 113.714901 229.169935 113.714901l0 0c-9.685593 0-18.232247 3.418866-24.498974 9.69685-6.26775 6.27696-9.69685 14.832823-9.69685 24.529673l0 0 0 724.489532 0 0c0 9.69685 3.429099 18.252713 9.69685 24.52865 6.26775 6.277984 14.813381 10.276041 24.498974 10.276041l0 0 563.02307 0 0 0C801.868365 907.235646 810.425252 903.236566 816.682769 896.959605L816.682769 896.959605zM229.169935 61.798485l442.211541 0 2.838651 0 1.719154 1.708921L876.518552 284.850583l1.720178 1.719154 0 2.278903 0 583.583338c0 23.968901-9.69685 45.639456-25.071002 61.051471l0 0c-15.392572 15.393595-37.044708 25.090445-60.974723 25.090445l0 0-563.02307 0 0 0c-23.360034 0-45.02138-9.69685-60.974723-25.090445-15.383362-15.413038-25.069979-37.08257-25.069979-61.051471L143.125233 147.941424c0-23.38971 9.686616-45.070498 25.069979-61.043285C184.148555 71.494311 205.809901 61.798485 229.169935 61.798485L229.169935 61.798485z"
+                                                    fill="#E4E7ED"
+                                                ></path>
+                                            </svg>
                                             <img
                                                 :src="require('@/assets/link.png')"
                                                 width="20px"
                                                 height="20px"
                                                 v-if="scope.row.kind === 'link'"
                                             />
-                                            <div style="margin-left: 5px">{{ scope.row.name }}</div>
+                                            <div style="margin-left: 5px">
+                                                {{ scope.row.name }}
+                                            </div>
                                         </div>
                                     </template>
                                 </el-table-column>
-                                <el-table-column prop="size" label="Size" width="90"> </el-table-column>
-                                <el-table-column prop="kind" label="Kind" width="80"> </el-table-column>
-                                <el-table-column prop="modifiedTime" label="Last modified" width="132">
+                                <el-table-column
+                                    prop="size"
+                                    label="Size"
+                                    width="90"
+                                    sortable="custom"
+                                    :formatter="sizeFormatter"
+                                >
                                 </el-table-column>
-                                <el-table-column prop="permissions" label="Permissions" width="95"> </el-table-column>
+                                <el-table-column prop="kind" label="Kind" width="80" sortable="custom">
+                                </el-table-column>
+                                <el-table-column
+                                    prop="modifiedTime"
+                                    label="Last modified"
+                                    width="150"
+                                    sortable="custom"
+                                >
+                                </el-table-column>
                             </el-table>
                             <ul
                                 v-if="isLocalMenuVisible"
@@ -399,13 +426,19 @@
                                 ref="remoteMultipleTable"
                                 @row-click="handleRemoteRowClick"
                                 row-key="name"
+                                @sort-change="remoteSortChange"
                             >
                                 <template slot="empty">
                                     <div style="height: 100%">
                                         <el-empty description="No Rows To Show"></el-empty>
                                     </div>
                                 </template>
-                                <el-table-column prop="name" label="Name" :show-overflow-tooltip="true">
+                                <el-table-column
+                                    prop="name"
+                                    label="Name"
+                                    :show-overflow-tooltip="true"
+                                    sortable="custom"
+                                >
                                     <template slot-scope="scope">
                                         <div style="display: flex; align-items: center">
                                             <img
@@ -414,12 +447,19 @@
                                                 height="20px"
                                                 v-if="scope.row.kind === 'folder' || scope.row.kind === ''"
                                             />
-                                            <img
-                                                :src="require('@/assets/file.png')"
-                                                width="20px"
-                                                height="20px"
+                                            <svg
+                                                viewBox="0 0 1024 1024"
+                                                version="1.1"
+                                                xmlns="http://www.w3.org/2000/svg"
+                                                width="20"
+                                                height="20"
                                                 v-if="scope.row.kind === 'file'"
-                                            />
+                                            >
+                                                <path
+                                                    d="M637.194862 113.714901l0 189.396581 182.346001 0L649.150148 113.714901 637.194862 113.714901zM816.682769 896.959605c6.27696-6.275937 10.255575-14.8318 10.255575-24.52865L826.938344 355.018689l-195.461717 0 0 0c-12.534478 0-24.489764-5.13802-32.467459-13.693884l0 0c-8.555863-7.985882-13.674441-19.391652-13.674441-32.515554L585.334727 113.714901 229.169935 113.714901l0 0c-9.685593 0-18.232247 3.418866-24.498974 9.69685-6.26775 6.27696-9.69685 14.832823-9.69685 24.529673l0 0 0 724.489532 0 0c0 9.69685 3.429099 18.252713 9.69685 24.52865 6.26775 6.277984 14.813381 10.276041 24.498974 10.276041l0 0 563.02307 0 0 0C801.868365 907.235646 810.425252 903.236566 816.682769 896.959605L816.682769 896.959605zM229.169935 61.798485l442.211541 0 2.838651 0 1.719154 1.708921L876.518552 284.850583l1.720178 1.719154 0 2.278903 0 583.583338c0 23.968901-9.69685 45.639456-25.071002 61.051471l0 0c-15.392572 15.393595-37.044708 25.090445-60.974723 25.090445l0 0-563.02307 0 0 0c-23.360034 0-45.02138-9.69685-60.974723-25.090445-15.383362-15.413038-25.069979-37.08257-25.069979-61.051471L143.125233 147.941424c0-23.38971 9.686616-45.070498 25.069979-61.043285C184.148555 71.494311 205.809901 61.798485 229.169935 61.798485L229.169935 61.798485z"
+                                                    fill="#E4E7ED"
+                                                ></path>
+                                            </svg>
                                             <img
                                                 :src="require('@/assets/link.png')"
                                                 width="20px"
@@ -430,11 +470,25 @@
                                         </div>
                                     </template>
                                 </el-table-column>
-                                <el-table-column prop="size" label="Size" width="90"> </el-table-column>
-                                <el-table-column prop="kind" label="Kind" width="80"> </el-table-column>
-                                <el-table-column prop="modifiedTime" label="Last modified" width="132">
+                                <el-table-column
+                                    prop="size"
+                                    label="Size"
+                                    width="90"
+                                    sortable="custom"
+                                    :formatter="sizeFormatter"
+                                >
                                 </el-table-column>
-                                <el-table-column prop="permissions" label="Permissions" width="95"> </el-table-column>
+                                <el-table-column prop="kind" label="Kind" width="80" sortable="custom">
+                                </el-table-column>
+                                <el-table-column
+                                    prop="modifiedTime"
+                                    label="Last modified"
+                                    width="150"
+                                    sortable="custom"
+                                >
+                                </el-table-column>
+                                <el-table-column prop="permissions" label="Permissions" width="115" sortable="custom">
+                                </el-table-column>
                             </el-table>
                             <ul
                                 v-if="isRemoteMenuVisible"
@@ -526,7 +580,7 @@
                                 <el-table-column label="Remote file" prop="remote" :show-overflow-tooltip="true">
                                 </el-table-column>
                                 <el-table-column label="Size" prop="size" width="136"> </el-table-column>
-                                <el-table-column label="Time" prop="time" width="136"> </el-table-column>
+                                <el-table-column label="Time" prop="time" width="150"> </el-table-column>
                                 <el-table-column label="Reason" prop="reason"> </el-table-column>
                             </el-table>
                         </el-tab-pane>
@@ -553,7 +607,7 @@
                                 <el-table-column label="Remote file" prop="remote" :show-overflow-tooltip="true">
                                 </el-table-column>
                                 <el-table-column label="Size" prop="size" width="136"> </el-table-column>
-                                <el-table-column label="Time" prop="time" width="136"> </el-table-column>
+                                <el-table-column label="Time" prop="time" width="150"> </el-table-column>
                             </el-table>
                         </el-tab-pane>
                     </el-tabs>
@@ -1006,22 +1060,8 @@ export default {
             },
             sessionList: [],
             showEditSession: false,
-            columnDefs: [
-                { headerName: 'Name', field: 'name' },
-                { headerName: 'Size', field: 'size' },
-                { headerName: 'Kind', field: 'kind' },
-                { headerName: 'Last modified', field: 'modifiedTime' },
-                { headerName: 'Permissions', field: 'permissions' }
-            ],
             localRowData: [],
             remoteRowData: [],
-            gridOptions: {
-                rowSelection: 'multiple',
-                onSelectionChanged: () => {
-                    const selectedData = this.$refs.rightGrid.api.getSelectedRows()
-                    console.log('选中的行数据:', selectedData)
-                }
-            },
             search: '',
             localPath: '',
             remotePath: '',
@@ -1089,6 +1129,69 @@ export default {
         this.getHome()
     },
     methods: {
+        sizeFormatter(row, column) {
+            return row.kind === 'file' ? filesize(row.size, { standard: 'jedec' }) : ''
+        },
+        localSortChange({ column, prop, order }) {
+            this.localRowData = this.localRowData.filter(item => {
+                return item.name !== '..'
+            })
+            if (order === 'ascending') {
+                if (prop === 'name') {
+                    this.localRowData.sort((a, b) => a[prop].localeCompare(b[prop], 'zh'))
+                } else if (prop === 'modifiedTime') {
+                    this.localRowData.sort((a, b) => Date.parse(a[prop]) - Date.parse(b[prop]))
+                } else if (prop === 'size') {
+                    this.localRowData.sort((a, b) => a[prop] - b[prop])
+                } else {
+                    this.localRowData.sort((a, b) => a[prop].localeCompare(b[prop], 'zh'))
+                }
+            } else if (order === 'descending') {
+                if (prop === 'name') {
+                    this.localRowData.sort((a, b) => b[prop].localeCompare(a[prop], 'zh'))
+                } else if (prop === 'modifiedTime') {
+                    this.localRowData.sort((a, b) => Date.parse(b[prop]) - Date.parse(a[prop]))
+                } else if (prop === 'size') {
+                    this.localRowData.sort((a, b) => b[prop] - a[prop])
+                } else {
+                    this.localRowData.sort((a, b) => b[prop].localeCompare(a[prop], 'zh'))
+                }
+            }
+            this.localRowData.unshift({
+                kind: '',
+                name: '..'
+            })
+        },
+        remoteSortChange({ column, prop, order }) {
+            this.remoteRowData = this.remoteRowData.filter(item => {
+                return item.name !== '..'
+            })
+            if (order === 'ascending') {
+                if (prop === 'name') {
+                    this.remoteRowData.sort((a, b) => a[prop].localeCompare(b[prop], 'zh'))
+                } else if (prop === 'modifiedTime') {
+                    this.remoteRowData.sort((a, b) => Date.parse(a[prop]) - Date.parse(b[prop]))
+                } else if (prop === 'size') {
+                    this.remoteRowData.sort((a, b) => a[prop] - b[prop])
+                } else {
+                    this.remoteRowData.sort((a, b) => a[prop].localeCompare(b[prop], 'zh'))
+                }
+            } else if (order === 'descending') {
+                if (prop === 'name') {
+                    this.remoteRowData.sort((a, b) => b[prop].localeCompare(a[prop], 'zh'))
+                } else if (prop === 'modifiedTime') {
+                    this.remoteRowData.sort((a, b) => Date.parse(b[prop]) - Date.parse(a[prop]))
+                } else if (prop === 'size') {
+                    this.remoteRowData.sort((a, b) => b[prop] - a[prop])
+                } else {
+                    this.remoteRowData.sort((a, b) => b[prop].localeCompare(a[prop], 'zh'))
+                }
+            }
+            this.remoteRowData.unshift({
+                kind: '',
+                name: '..'
+            })
+        },
         handleLicenseKey() {
             if (this.licenseKey) {
                 const client = new ClientJS()
@@ -1212,7 +1315,7 @@ export default {
         },
         fastPut(localFile, remoteFile, isRefresh) {
             return new Promise((resolve, reject) => {
-                let size = '--'
+                let size = ''
                 this.sftp.fastPut(
                     localFile,
                     remoteFile,
@@ -1240,7 +1343,7 @@ export default {
                                 local: localFile,
                                 remote: remoteFile,
                                 direction: '-->>',
-                                time: dayjs().format('M/D/YY H:m A'),
+                                time: dayjs().format('MM/DD/YYYY HH:mm:ss'),
                                 size: size,
                                 reason: err.toString()
                             }
@@ -1255,7 +1358,7 @@ export default {
                                 remote: remoteFile,
                                 direction: '-->>',
                                 size: size,
-                                time: dayjs().format('M/D/YY H:m A')
+                                time: dayjs().format('MM/DD/YYYY HH:mm:ss')
                             }
                             this.successfulTransfersList = Object.values(this.successfulTransfersObject)
                             if (isRefresh) {
@@ -1292,12 +1395,9 @@ export default {
                                             }
                                             remoteRowData.push({
                                                 name: row.filename,
-                                                size:
-                                                    kind === 'file'
-                                                        ? filesize(row.attrs.size, { standard: 'jedec' })
-                                                        : '--',
+                                                size: kind === 'file' ? row.attrs.size : '',
                                                 kind: kind,
-                                                modifiedTime: dayjs.unix(row.attrs.mtime).format('M/D/YY H:m A'),
+                                                modifiedTime: dayjs.unix(row.attrs.mtime).format('MM/DD/YYYY HH:mm:ss'),
                                                 permissions: row.longname.substring(0, 11)
                                             })
                                         }
@@ -1407,7 +1507,7 @@ export default {
             shell.mkdir('-p', newFolderList)
         },
         fastGet(remoteFile, localFile, isRefresh) {
-            let size = '--'
+            let size = ''
             return new Promise((resolve, reject) => {
                 this.sftp.fastGet(
                     remoteFile,
@@ -1436,7 +1536,7 @@ export default {
                                 local: localFile,
                                 remote: remoteFile,
                                 direction: '<<--',
-                                time: dayjs().format('M/D/YY H:m A'),
+                                time: dayjs().format('MM/DD/YYYY HH:mm:ss'),
                                 size: size,
                                 reason: err.toString()
                             }
@@ -1451,7 +1551,7 @@ export default {
                                 remote: remoteFile,
                                 direction: '<<--',
                                 size: size,
-                                time: dayjs().format('M/D/YY H:m A')
+                                time: dayjs().format('MM/DD/YYYY HH:mm:ss')
                             }
                             this.successfulTransfersList = Object.values(this.successfulTransfersObject)
                             if (isRefresh) {
@@ -1597,9 +1697,9 @@ export default {
                         }
                         remoteRowData.push({
                             name: row.filename,
-                            size: kind === 'file' ? filesize(row.attrs.size, { standard: 'jedec' }) : '--',
+                            size: kind === 'file' ? row.attrs.size : '',
                             kind: kind,
-                            modifiedTime: dayjs.unix(row.attrs.mtime).format('M/D/YY H:m A'),
+                            modifiedTime: dayjs.unix(row.attrs.mtime).format('MM/DD/YYYY HH:mm:ss'),
                             permissions: row.longname.substring(0, 11)
                         })
                     }
@@ -1660,10 +1760,9 @@ export default {
                         }
                         result.push({
                             name: file,
-                            size: kind === 'file' ? filesize(stat.size, { standard: 'jedec' }) : '--',
+                            size: kind === 'file' ? stat.size : '',
                             kind: kind,
-                            modifiedTime: dayjs(stat.mtimeMs).format('M/D/YY H:m A'),
-                            permissions: permissions
+                            modifiedTime: dayjs(stat.mtimeMs).format('MM/DD/YYYY HH:mm:ss')
                         })
                     } catch (err) {
                         console.log(err)
@@ -1713,10 +1812,9 @@ export default {
                 }
                 localRowData.push({
                     name: file.name,
-                    size: kind === 'file' ? filesize(file.size, { standard: 'jedec' }) : '--',
+                    size: kind === 'file' ? file.size : '',
                     kind: kind,
-                    modifiedTime: dayjs(file.mtimeMs).format('M/D/YY H:m A'),
-                    permissions: permissions
+                    modifiedTime: dayjs(file.mtimeMs).format('MM/DD/YYYY HH:mm:ss')
                 })
             })
             this.localRowData = localRowData
@@ -1792,9 +1890,9 @@ export default {
                                 }
                                 remoteRowData.push({
                                     name: row.filename,
-                                    size: kind === 'file' ? filesize(row.attrs.size, { standard: 'jedec' }) : '--',
+                                    size: kind === 'file' ? row.attrs.size : '',
                                     kind: kind,
-                                    modifiedTime: dayjs.unix(row.attrs.mtime).format('M/D/YY H:m A'),
+                                    modifiedTime: dayjs.unix(row.attrs.mtime).format('MM/DD/YYYY HH:mm:ss'),
                                     permissions: row.longname.substring(0, 11)
                                 })
                             }
@@ -1869,9 +1967,9 @@ export default {
                         }
                         remoteRowData.push({
                             name: row.filename,
-                            size: kind === 'file' ? filesize(row.attrs.size, { standard: 'jedec' }) : '--',
+                            size: kind === 'file' ? row.attrs.size : '',
                             kind: kind,
-                            modifiedTime: dayjs.unix(row.attrs.mtime).format('M/D/YY H:m A'),
+                            modifiedTime: dayjs.unix(row.attrs.mtime).format('MM/DD/YYYY HH:mm:ss'),
                             permissions: row.longname.substring(0, 11)
                         })
                     }
@@ -1914,10 +2012,9 @@ export default {
                     }
                     localRowData.push({
                         name: file.name,
-                        size: kind === 'file' ? filesize(file.size, { standard: 'jedec' }) : '--',
+                        size: kind === 'file' ? file.size : '',
                         kind: kind,
-                        modifiedTime: dayjs(file.mtimeMs).format('M/D/YY H:m A'),
-                        permissions: permissions
+                        modifiedTime: dayjs(file.mtimeMs).format('MM/DD/YYYY HH:mm:ss')
                     })
                 })
                 this.localRowData = localRowData
@@ -1953,10 +2050,9 @@ export default {
                     }
                     localRowData.push({
                         name: file.name,
-                        size: kind === 'file' ? filesize(file.size, { standard: 'jedec' }) : '--',
+                        size: kind === 'file' ? file.size : '',
                         kind: kind,
-                        modifiedTime: dayjs(file.mtimeMs).format('M/D/YY H:m A'),
-                        permissions: permissions
+                        modifiedTime: dayjs(file.mtimeMs).format('MM/DD/YYYY HH:mm:ss')
                     })
                 })
                 this.localRowData = localRowData
@@ -1998,9 +2094,9 @@ export default {
                         }
                         remoteRowData.push({
                             name: row.filename,
-                            size: kind === 'file' ? filesize(row.attrs.size, { standard: 'jedec' }) : '--',
+                            size: kind === 'file' ? row.attrs.size : '',
                             kind: kind,
-                            modifiedTime: dayjs.unix(row.attrs.mtime).format('M/D/YY H:m A'),
+                            modifiedTime: dayjs.unix(row.attrs.mtime).format('MM/DD/YYYY HH:mm:ss'),
                             permissions: row.longname.substring(0, 11)
                         })
                     }
@@ -2041,9 +2137,9 @@ export default {
                         }
                         remoteRowData.push({
                             name: row.filename,
-                            size: kind === 'file' ? filesize(row.attrs.size, { standard: 'jedec' }) : '--',
+                            size: kind === 'file' ? row.attrs.size : '',
                             kind: kind,
-                            modifiedTime: dayjs.unix(row.attrs.mtime).format('M/D/YY H:m A'),
+                            modifiedTime: dayjs.unix(row.attrs.mtime).format('MM/DD/YYYY HH:mm:ss'),
                             permissions: row.longname.substring(0, 11)
                         })
                     }
@@ -2085,9 +2181,9 @@ export default {
                         }
                         remoteRowData.push({
                             name: row.filename,
-                            size: kind === 'file' ? filesize(row.attrs.size, { standard: 'jedec' }) : '--',
+                            size: kind === 'file' ? row.attrs.size : '',
                             kind: kind,
-                            modifiedTime: dayjs.unix(row.attrs.mtime).format('M/D/YY H:m A'),
+                            modifiedTime: dayjs.unix(row.attrs.mtime).format('MM/DD/YYYY HH:mm:ss'),
                             permissions: row.longname.substring(0, 11)
                         })
                     }
@@ -2869,6 +2965,7 @@ li:hover {
 }
 ::v-deep .el-table td {
     font-size: 12px !important;
+    font-weight: 450;
 }
 ::v-deep .el-table thead th {
     background: #f5f7f7 !important;

@@ -237,7 +237,6 @@ function ptyProcessExit(code, name) {
     }
 }
 
-// 当运行第二个实例时，将会聚焦到win这个窗口
 app.on('second-instance', () => {
     if (mainWindow) {
         if (mainWindow.isMinimized()) mainWindow.restore()
