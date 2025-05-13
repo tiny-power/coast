@@ -487,7 +487,7 @@
                                     sortable="custom"
                                 >
                                 </el-table-column>
-                                <el-table-column prop="permissions" label="Permissions" width="115" sortable="custom">
+                                <el-table-column prop="permissions" label="Permissions" width="120" sortable="custom">
                                 </el-table-column>
                             </el-table>
                             <ul
