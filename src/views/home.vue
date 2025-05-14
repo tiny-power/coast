@@ -279,6 +279,7 @@
                                 @row-click="handleLocalRowClick"
                                 row-key="name"
                                 @sort-change="localSortChange"
+                                :row-class-name="tableRowClassName"
                             >
                                 <template slot="empty">
                                     <div style="height: 100%">
@@ -447,6 +448,7 @@
                                 @row-click="handleRemoteRowClick"
                                 row-key="name"
                                 @sort-change="remoteSortChange"
+                                :row-class-name="tableRowClassName"
                             >
                                 <template slot="empty">
                                     <div style="height: 100%">
@@ -1106,7 +1108,7 @@ export default {
             localPath: '',
             remotePath: '',
             localOptions: [],
-            remoteOptions: ['/', '/root'],
+            remoteOptions: ['/root'],
             transfers: 'queuedFiles',
             queuedFiles: 0,
             failedTransfers: 0,
@@ -1297,17 +1299,46 @@ export default {
         handleSelectionChange(selection) {
             this.selectedRows = selection
         },
+        tableRowClassName({ row, rowIndex }) {
+            row.index = rowIndex
+        },
         handleLocalRowClick(row, column, event) {
             this.$refs.remoteMultipleTable.clearSelection()
             if (event.metaKey || event.ctrlKey) {
                 const selected = this.selectedRows.includes(row)
                 if (selected) {
-                    const index = this.selectedRows.findIndex(d => d.name === row.name)
-                    this.selectedRows.splice(index, 1)
+                    this.selectedRows.splice(row.index, 1)
                     this.$refs.localMultipleTable.toggleRowSelection(row, false)
                 } else {
                     this.selectedRows.push({ ...row })
                     this.$refs.localMultipleTable.toggleRowSelection(row, true)
+                }
+            } else if (event.shiftKey) {
+                let selectIndexs = []
+                for (let i = 0; i < this.selectedRows.length; i++) {
+                    const index = this.localRowData.findIndex(element => element.name === this.selectedRows[i].name)
+                    selectIndexs.push(index)
+                }
+                selectIndexs.sort()
+                let minIndex = -1
+                let maxIndex = 0
+                if (selectIndexs.length === 0) {
+                    minIndex = row.index
+                    maxIndex = row.index + 1
+                } else {
+                    if (selectIndexs[0] >= row.index) {
+                        minIndex = row.index
+                        maxIndex = selectIndexs[0] + 1
+                    } else {
+                        minIndex = selectIndexs[0]
+                        maxIndex = row.index + 1
+                    }
+                }
+                let selectData = this.localRowData.slice(minIndex, maxIndex)
+                this.$refs.localMultipleTable.clearSelection()
+                for (let i = 0; i < selectData.length; i++) {
+                    this.selectedRows.push({ ...selectData[i] })
+                    this.$refs.localMultipleTable.toggleRowSelection(selectData[i], true)
                 }
             } else {
                 this.$refs.localMultipleTable.clearSelection()
@@ -1325,6 +1356,33 @@ export default {
                 } else {
                     this.selectedRows.push({ ...row })
                     this.$refs.remoteMultipleTable.toggleRowSelection(row, true)
+                }
+            } else if (event.shiftKey) {
+                let selectIndexs = []
+                for (let i = 0; i < this.selectedRows.length; i++) {
+                    const index = this.remoteRowData.findIndex(element => element.name === this.selectedRows[i].name)
+                    selectIndexs.push(index)
+                }
+                selectIndexs.sort()
+                let minIndex = -1
+                let maxIndex = 0
+                if (selectIndexs.length === 0) {
+                    minIndex = row.index
+                    maxIndex = row.index + 1
+                } else {
+                    if (selectIndexs[0] >= row.index) {
+                        minIndex = row.index
+                        maxIndex = selectIndexs[0] + 1
+                    } else {
+                        minIndex = selectIndexs[0]
+                        maxIndex = row.index + 1
+                    }
+                }
+                let selectData = this.remoteRowData.slice(minIndex, maxIndex)
+                this.$refs.remoteMultipleTable.clearSelection()
+                for (let i = 0; i < selectData.length; i++) {
+                    this.selectedRows.push({ ...selectData[i] })
+                    this.$refs.remoteMultipleTable.toggleRowSelection(selectData[i], true)
                 }
             } else {
                 this.$refs.remoteMultipleTable.clearSelection()
