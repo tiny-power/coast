@@ -283,7 +283,7 @@
                             >
                                 <template slot="empty">
                                     <div style="height: 100%">
-                                        <el-empty description="No Rows To Show"></el-empty>
+                                        <el-empty description="Not connected to any server"></el-empty>
                                     </div>
                                 </template>
                                 <el-table-column
@@ -428,6 +428,7 @@
                                 style="width: 100%"
                                 @change="remotePathChange"
                                 class="autocomplete"
+                                :disabled="!sftp"
                             >
                                 <template slot-scope="{ item }">
                                     {{ item }}
@@ -452,7 +453,7 @@
                             >
                                 <template slot="empty">
                                     <div style="height: 100%">
-                                        <el-empty description="No Rows To Show"></el-empty>
+                                        <el-empty description="Not connected to any server"></el-empty>
                                     </div>
                                 </template>
                                 <el-table-column
@@ -3091,5 +3092,8 @@ li:hover {
     border-top: none;
     border-bottom: none;
     border-right: none;
+}
+::v-deep .el-input.is-disabled .el-input__inner {
+    background-color: rgb(121, 123, 136, 0.1);
 }
 </style>
