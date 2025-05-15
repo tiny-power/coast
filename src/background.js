@@ -23,15 +23,14 @@ async function createMainWindow() {
     }
 
     const size = screen.getPrimaryDisplay().workAreaSize
-    console.log(`Width: ${size.width}, Height: ${size.height}`)
 
     mainWindow = new BrowserWindow({
         title: 'Coast',
         center: true,
-        width: 1200,
+        width: 1280,
         height: process.platform === 'win32' ? 750 : size.height,
-        minWidth: 720,
-        minHeight: 440,
+        minWidth: 1280,
+        minHeight: 750,
         resizable: true,
         maximizable: true,
         autoHideMenuBar: true,
