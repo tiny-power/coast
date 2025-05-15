@@ -2812,7 +2812,17 @@ export default {
                 window.ipcRenderer.invoke('write', name, data)
             } else if (protocol === 'ssh') {
                 let item = this.tabs[name]
-                item.stream.write(data)
+                if (os.platform() === 'win32') {
+                    if (data === '\x16') {
+                        navigator.clipboard.readText().then(text => {
+                            item.stream.write(text)
+                        })
+                    } else {
+                        item.stream.write(data)
+                    }
+                } else {
+                    item.stream.write(data)
+                }
             }
         }
     }
