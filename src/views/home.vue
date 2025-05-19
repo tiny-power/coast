@@ -2766,7 +2766,11 @@ export default {
             item.xterm.element.addEventListener('contextmenu', event => {
                 event.preventDefault()
                 navigator.clipboard.readText().then(text => {
-                    window.ipcRenderer.invoke('write', item.name, text)
+                    if (item.protocol === 'shell') {
+                        window.ipcRenderer.invoke('write', item.name, text)
+                    } else if (item.protocol === 'ssh') {
+                        item.stream.write(text)
+                    }
                 })
             })
             item.fitAddon.fit()
