@@ -1556,7 +1556,7 @@ export default {
                             local: localFile,
                             remote: remoteFile,
                             direction: '-->>',
-                            size: selectedRow.size,
+                            size: filesize(selectedRow.size, { standard: 'jedec' }),
                             progress: 0
                         }
                         this.queuedFilesList = Object.values(this.queuedFilesObject)
@@ -1716,7 +1716,7 @@ export default {
                             local: localFile,
                             remote: remoteFile,
                             direction: '<<--',
-                            size: selectedRow.size,
+                            size: filesize(selectedRow.size, { standard: 'jedec' }),
                             progress: 0
                         }
                         this.queuedFilesList = Object.values(this.queuedFilesObject)
