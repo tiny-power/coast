@@ -221,6 +221,7 @@
                         placeholder="Select from your saved Hosts"
                         @select="handleSelect"
                         style="min-width: 700px"
+                        clearable
                     >
                         <template slot-scope="{ item }">
                             {{ item.label ? item.host + ' (' + item.label + ')' : item.host }}
@@ -979,7 +980,7 @@
                 </div>
             </div>
         </div>
-        <el-dialog title="Info" :visible.sync="showAddSession" width="500px">
+        <el-dialog title="Info" :visible.sync="showAddSession" width="500px" :close-on-click-modal="false">
             <el-form ref="sessionForm" :model="sessionForm" :rules="sessionRules">
                 <el-form-item label="Host Name(or IP address)" prop="host">
                     <el-input v-model="sessionForm.host" clearable></el-input>
@@ -999,7 +1000,7 @@
                 <el-button type="primary" @click="handleSaveSession">Connect</el-button>
             </span>
         </el-dialog>
-        <el-dialog title="Info" :visible.sync="showEditSession" width="500px">
+        <el-dialog title="Info" :visible.sync="showEditSession" width="500px" :close-on-click-modal="false">
             <el-form ref="sessionForm" :model="sessionForm" :rules="sessionRules">
                 <el-form-item label="Label">
                     <el-input v-model="sessionForm.label" clearable></el-input>
@@ -1950,6 +1951,7 @@ export default {
                     console.log('Client :: ready')
                     this.conn.sftp((err, sftp) => {
                         if (err) throw err
+                        this.search = item.host
                         this.sftp = sftp
                         this.remotePath = '/root'
                         this.curRemotePath = '/root'
@@ -2358,6 +2360,7 @@ export default {
                 this.addTab('shell')
             } else if (command === 'ssh') {
                 if (this.isPay || this.sessionList.length < 5) {
+                    this.sessionForm = {}
                     this.showAddSession = true
                     if (this.$refs.sessionForm) {
                         this.$refs.sessionForm.resetFields()
