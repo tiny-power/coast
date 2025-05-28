@@ -676,11 +676,11 @@
                     v-if="settingFlag"
                     :style="{
                         width: '300px',
-                        height: clientHeight - 70 + 'px',
+                        height: clientHeight - 60 + 'px',
                         overflow: 'auto',
                         padding: '6px',
                         'border-radius': '8px',
-                        margin: '10px 10px 10px 0px',
+                        margin: '0px 10px 10px 0px',
                         'box-sizing': 'border-box',
                         background: 'rgb(121,123,136,0.1)',
                         overflow: 'auto'
@@ -773,7 +773,7 @@
                         >
                             New Snippet
                         </div>
-                        <div :style="{ height: clientHeight - 180 + 'px', overflow: 'auto' }">
+                        <div :style="{ height: clientHeight - 170 + 'px', overflow: 'auto' }">
                             <div
                                 v-for="(item, index) in snippetList"
                                 :key="index"
@@ -1167,6 +1167,17 @@ export default {
         window.addEventListener('resize', () => {
             this.clientWidth = document.documentElement.clientWidth || document.body.clientWidth
             this.clientHeight = document.documentElement.clientHeight || document.body.clientHeight
+            for (const key in this.tabs) {
+                this.$nextTick(() => {
+                    let item = this.tabs[key]
+                    item.fitAddon.fit()
+                    if (item.protocol === 'shell') {
+                        window.ipcRenderer.invoke('resize', key, item.xterm.rows, item.xterm.cols)
+                    } else if (item.protocol === 'ssh') {
+                        item.stream.setWindow(item.xterm.rows, item.xterm.cols)
+                    }
+                })
+            }
         })
         this.querySnippetAll()
         this.querySessionAll()
@@ -2745,20 +2756,6 @@ export default {
             item.xterm.loadAddon(item.searchAddon)
             item.webLinksAddon = new WebLinksAddon()
             item.xterm.loadAddon(item.webLinksAddon)
-            window.addEventListener('resize', () => {
-                try {
-                    this.clientWidth = document.documentElement.clientWidth || document.body.clientWidth
-                    this.clientHeight = document.documentElement.clientHeight || document.body.clientHeight
-                    item.fitAddon.fit()
-                    if (item.protocol === 'shell') {
-                        window.ipcRenderer.invoke('resize', item.name, item.xterm.rows, item.xterm.cols)
-                    } else if (item.protocol === 'ssh') {
-                        item.stream.setWindow(item.xterm.rows, item.xterm.cols)
-                    }
-                } catch (e) {
-                    this.$message.error(e.message)
-                }
-            })
             item.xterm.onData(data => this.terminalOnData(item.protocol, item.name, data))
             item.xterm.onSelectionChange(() => {
                 if (item.xterm.hasSelection()) {
