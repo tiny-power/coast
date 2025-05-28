@@ -944,7 +944,7 @@
                     </div>
                     <div v-if="attribute === 'color'">
                         <div style="color: #797b88; margin-top: 10px; margin-bottom: 15px; font-size: 14px">Themes</div>
-                        <div :style="{ height: clientHeight - 165 + 'px', overflow: 'auto' }">
+                        <div :style="{ height: clientHeight - 155 + 'px', overflow: 'auto' }">
                             <div
                                 v-for="(item, key) in themes"
                                 :key="key"
