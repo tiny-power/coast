@@ -2052,7 +2052,11 @@ export default {
         },
         remoteRowDoubleClicked(row, column, cell, event) {
             if (row.kind === 'folder') {
-                this.curRemotePath = this.curRemotePath + '/' + row.name
+                if (this.curRemotePath === '/') {
+                    this.curRemotePath = this.curRemotePath + row.name
+                } else {
+                    this.curRemotePath = this.curRemotePath + '/' + row.name
+                }
                 this.remotePath = path.dirname(this.curRemotePath + '/' + row.name)
                 this.sftp.readdir(this.curRemotePath, (err, list) => {
                     if (err) {
