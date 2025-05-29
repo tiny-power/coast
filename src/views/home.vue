@@ -1051,7 +1051,6 @@ const path = require('path')
 const { Client } = require('ssh2')
 var shell = require('shelljs')
 const fs = require('fs')
-var Mode = require('stat-mode')
 
 export default {
     data() {
@@ -1585,19 +1584,13 @@ export default {
                             if (err) {
                                 console.error('Download Error:', err)
                             } else {
-                                let localRowData = this.getLocalDir(this.curLocalPath)
-                                if (localRowData.length != 0) {
-                                    this.localRowData = localRowData
-                                }
+                                this.localRowData = this.getLocalDir(this.curLocalPath)
                             }
                         })
                     } else if (selectedRow.kind === 'file' || selectedRow.kind === 'link') {
                         try {
                             fs.unlinkSync(path.join(this.curLocalPath, selectedRow.name))
-                            let localRowData = this.getLocalDir(this.curLocalPath)
-                            if (localRowData.length != 0) {
-                                this.localRowData = localRowData
-                            }
+                            this.localRowData = this.getLocalDir(this.curLocalPath)
                             console.log('Delete Success')
                         } catch (err) {
                             console.error('Delete Error:', error)
@@ -1606,10 +1599,7 @@ export default {
                 }
             } else if (action === 'rename') {
             } else if (action === 'refresh') {
-                let localRowData = this.getLocalDir(this.curLocalPath)
-                if (localRowData.length != 0) {
-                    this.localRowData = localRowData
-                }
+                this.localRowData = this.getLocalDir(this.curLocalPath)
             } else if (action === 'Create directory') {
             } else if (action === 'Create directory and enter it') {
             }
@@ -1666,10 +1656,7 @@ export default {
                             }
                             this.successfulTransfersList = Object.values(this.successfulTransfersObject)
                             if (isRefresh) {
-                                let localRowData = this.getLocalDir(this.curLocalPath)
-                                if (localRowData.length != 0) {
-                                    this.localRowData = localRowData
-                                }
+                                this.localRowData = this.getLocalDir(this.curLocalPath)
                             }
                             resolve()
                         }
@@ -1704,10 +1691,7 @@ export default {
                             input.push(limit(() => this.mkdirLocalFolder(newFolderList)))
                         }
                         await Promise.all(input)
-                        let localRowData = this.getLocalDir(this.curLocalPath)
-                        if (localRowData.length != 0) {
-                            this.localRowData = localRowData
-                        }
+                        this.localRowData = this.getLocalDir(this.curLocalPath)
                         this.queuedFiles = this.queuedFiles + fileList.length
                         for (let i = 0; i < fileList.length; i++) {
                             this.queuedFilesObject[fileList[i]] = {
@@ -1849,22 +1833,20 @@ export default {
                     let file = files[i]
                     try {
                         let stat = fs.lstatSync(path.join(directoryPath, file))
-                        var mode = new Mode(stat)
-                        let permissions = mode.toString()
-                        let kind = permissions.substring(0, 1)
-                        if (kind === '-') {
+                        let kind = 'other'
+                        if (stat.isFile()) {
                             kind = 'file'
-                        } else if (kind === 'd') {
+                        } else if (stat.isDirectory()) {
                             kind = 'folder'
-                        } else if (kind === 'p') {
+                        } else if (stat.isFIFO()) {
                             kind = 'FIFO'
-                        } else if (kind === 'l') {
+                        } else if (stat.isSymbolicLink()) {
                             kind = 'link'
-                        } else if (kind === 'b') {
+                        } else if (stat.isBlockDevice()) {
                             kind = 'block'
-                        } else if (kind === 'c') {
+                        } else if (stat.isCharacterDevice()) {
                             kind = 'character'
-                        } else if (kind === 's') {
+                        } else if (stat.isSocket()) {
                             kind = 'socket'
                         } else {
                             kind = 'other'
@@ -1900,35 +1882,7 @@ export default {
                     name: '..'
                 }
             ]
-            shell.ls('-lA', [this.localPath]).forEach(file => {
-                var mode = new Mode(file)
-                let permissions = mode.toString()
-                let kind = permissions.substring(0, 1)
-                if (kind === '-') {
-                    kind = 'file'
-                } else if (kind === 'd') {
-                    kind = 'folder'
-                } else if (kind === 'p') {
-                    kind = 'FIFO'
-                } else if (kind === 'l') {
-                    kind = 'link'
-                } else if (kind === 'b') {
-                    kind = 'block'
-                } else if (kind === 'c') {
-                    kind = 'character'
-                } else if (kind === 's') {
-                    kind = 'socket'
-                } else {
-                    kind = 'other'
-                }
-                localRowData.push({
-                    name: file.name,
-                    size: kind === 'file' ? file.size : '',
-                    kind: kind,
-                    modifiedTime: dayjs(file.mtimeMs).format('MM/DD/YYYY HH:mm:ss')
-                })
-            })
-            this.localRowData = localRowData
+            this.localRowData = this.getLocalDir(this.localPath)
         },
         querySearch(queryString, cb) {
             var sessions = this.sessionList
@@ -2028,21 +1982,15 @@ export default {
                 })
         },
         handleLocalSelect(selectPath) {
-            let localRowData = this.getLocalDir(selectPath)
-            if (localRowData.length != 0) {
-                this.localRowData = localRowData
-                this.curLocalPath = selectPath
-                this.localPath = selectPath
-            }
+            this.localRowData = this.getLocalDir(selectPath)
+            this.curLocalPath = selectPath
+            this.localPath = selectPath
         },
         localPathChange() {
-            let localRowData = this.getLocalDir(this.localPath)
-            if (localRowData.length != 0) {
-                this.localRowData = localRowData
-                this.curLocalPath = this.localPath
-                if (!this.localOptions.includes(this.localPath)) {
-                    this.localOptions.push(this.localPath)
-                }
+            this.localRowData = this.getLocalDir(this.localPath)
+            this.curLocalPath = this.localPath
+            if (!this.localOptions.includes(this.localPath)) {
+                this.localOptions.push(this.localPath)
             }
         },
         handleRemoteSelect(selectPath) {
@@ -2095,79 +2043,11 @@ export default {
             if (row.kind === 'folder') {
                 this.curLocalPath = path.join(this.curLocalPath, row.name)
                 this.localPath = path.dirname(path.join(this.curLocalPath, row.name))
-                let localRowData = [
-                    {
-                        kind: '',
-                        name: '..'
-                    }
-                ]
-                shell.ls('-lA', [this.curLocalPath]).forEach(file => {
-                    var mode = new Mode(file)
-                    let permissions = mode.toString()
-                    let kind = permissions.substring(0, 1)
-                    if (kind === '-') {
-                        kind = 'file'
-                    } else if (kind === 'd') {
-                        kind = 'folder'
-                    } else if (kind === 'p') {
-                        kind = 'FIFO'
-                    } else if (kind === 'l') {
-                        kind = 'link'
-                    } else if (kind === 'b') {
-                        kind = 'block'
-                    } else if (kind === 'c') {
-                        kind = 'character'
-                    } else if (kind === 's') {
-                        kind = 'socket'
-                    } else {
-                        kind = 'other'
-                    }
-                    localRowData.push({
-                        name: file.name,
-                        size: kind === 'file' ? file.size : '',
-                        kind: kind,
-                        modifiedTime: dayjs(file.mtimeMs).format('MM/DD/YYYY HH:mm:ss')
-                    })
-                })
-                this.localRowData = localRowData
+                this.localRowData = this.getLocalDir(this.curLocalPath)
             } else if (row.kind === '') {
                 this.curLocalPath = path.dirname(this.curLocalPath)
                 this.localPath = this.curLocalPath
-                let localRowData = [
-                    {
-                        kind: '',
-                        name: '..'
-                    }
-                ]
-                shell.ls('-lA', [this.curLocalPath]).forEach(file => {
-                    var mode = new Mode(file)
-                    let permissions = mode.toString()
-                    let kind = permissions.substring(0, 1)
-                    if (kind === '-') {
-                        kind = 'file'
-                    } else if (kind === 'd') {
-                        kind = 'folder'
-                    } else if (kind === 'p') {
-                        kind = 'FIFO'
-                    } else if (kind === 'l') {
-                        kind = 'link'
-                    } else if (kind === 'b') {
-                        kind = 'block'
-                    } else if (kind === 'c') {
-                        kind = 'character'
-                    } else if (kind === 's') {
-                        kind = 'socket'
-                    } else {
-                        kind = 'other'
-                    }
-                    localRowData.push({
-                        name: file.name,
-                        size: kind === 'file' ? file.size : '',
-                        kind: kind,
-                        modifiedTime: dayjs(file.mtimeMs).format('MM/DD/YYYY HH:mm:ss')
-                    })
-                })
-                this.localRowData = localRowData
+                this.localRowData = this.getLocalDir(this.curLocalPath)
             }
         },
         remoteRowDoubleClicked(row, column, cell, event) {
