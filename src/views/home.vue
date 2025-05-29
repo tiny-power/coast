@@ -164,14 +164,11 @@
                         }"
                     >
                         <li @click="menuSessionAction('edit')" style="width: 250px">
-                            <i class="el-icon-edit" style="color: #303133; margin-right: 8px; font-size: 16px"></i>
+                            <i class="el-icon-edit" style="color: #798c94; margin-right: 8px; font-size: 16px"></i>
                             <span>Edit Host</span>
                         </li>
                         <li @click="menuSessionAction('remove')" style="width: 250px">
-                            <i
-                                class="el-icon-delete-solid"
-                                style="color: #303133; margin-right: 8px; font-size: 16px"
-                            ></i>
+                            <i class="el-icon-delete" style="color: #798c94; margin-right: 8px; font-size: 16px"></i>
                             <span>Remove</span>
                         </li>
                     </ul>
