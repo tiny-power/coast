@@ -1,4 +1,4 @@
-import { app, protocol, BrowserWindow, ipcMain, screen } from 'electron'
+import { app, protocol, BrowserWindow, ipcMain, screen, shell } from 'electron'
 import { createProtocol } from 'vue-cli-plugin-electron-builder/lib'
 const isDevelopment = process.env.NODE_ENV !== 'production'
 import path from 'path'
@@ -159,6 +159,10 @@ ipcMain.handle('getHome', async () => {
     }
 })
 
+ipcMain.handle('openExternal', async (event, url) => {
+    shell.openExternal(url)
+})
+
 ipcMain.handle('getCheatsheetPath', async () => {
     let resourcesPath = process.resourcesPath
     if (process.platform == 'darwin') {
@@ -203,8 +207,8 @@ ipcMain.handle('terminal', async (event, name, rows, cols) => {
     }
     let env = process.env
     env.LANG = 'en_US.UTF-8'
-    const shell = os.platform() === 'win32' ? 'powershell.exe' : os.platform() === 'darwin' ? 'zsh' : 'bash'
-    ptyProcess = pty.spawn(shell, [os.platform() === 'win32' ? '' : '--login'], {
+    const file = os.platform() === 'win32' ? 'powershell.exe' : os.platform() === 'darwin' ? 'zsh' : 'bash'
+    ptyProcess = pty.spawn(file, [os.platform() === 'win32' ? '' : '--login'], {
         name: 'xterm-256color',
         rows: rows,
         cols: cols,

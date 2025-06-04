@@ -1253,6 +1253,14 @@ export default {
                 let pItems = document.querySelectorAll('.main-markdown p')
                 let codeItems = document.querySelectorAll('.main-markdown p code')
                 let inputItems = document.querySelectorAll('.cheatsheet .el-input__inner')
+                let aItems = document.querySelectorAll('.main-markdown a')
+                aItems.forEach(item => {
+                    item.addEventListener('click', async event => {
+                        event.preventDefault()
+                        await window.ipcRenderer.invoke('openExternal', item.getAttribute('href'))
+                    })
+                })
+
                 codeItems.forEach(item => {
                     if (item.parentElement.children.length === 1) {
                         let code = item.textContent
