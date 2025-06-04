@@ -779,7 +779,7 @@
                             <el-autocomplete
                                 v-model="cheatsheetValue"
                                 :fetch-suggestions="querySearchCheatsheet"
-                                placeholder="kill"
+                                placeholder="git"
                                 :trigger-on-focus="false"
                                 @select="handleSelectCheatsheet"
                                 clearable
@@ -1188,10 +1188,12 @@ export default {
             cheatsheetValue: '',
             cheatsheetOptions: [],
             cheatsheetHtml: '',
-            cheatsheetPath: ''
+            cheatsheetPath: '',
+            fileLimit: null
         }
     },
     mounted() {
+        this.fileLimit = pLimit(2)
         this.getCheatsheet()
         this.isPay = localStorage.getItem('isPay') || false
         let themeName = localStorage.getItem('theme') || 'Monokai'
@@ -1742,7 +1744,6 @@ export default {
         },
         async menuLocalAction(action) {
             if (action === 'upload') {
-                const fileLimit = pLimit(2)
                 const fileInput = []
                 let curRemotePath = this.curRemotePath
                 let curLocalPath = this.curLocalPath
@@ -1776,7 +1777,7 @@ export default {
                             }
                             this.queuedFilesList = Object.values(this.queuedFilesObject)
                             let localFile = fileList[i].replace(curRemotePath, curLocalPath)
-                            fileInput.push(fileLimit(() => this.fastPut(localFile, fileList[i], false)))
+                            fileInput.push(this.fileLimit(() => this.fastPut(localFile, fileList[i], false)))
                         }
                     } else if (selectedRow.kind === 'file') {
                         const localFile = path.join(this.curLocalPath, selectedRow.name)
@@ -1790,7 +1791,7 @@ export default {
                             progress: 0
                         }
                         this.queuedFilesList = Object.values(this.queuedFilesObject)
-                        fileInput.push(fileLimit(() => this.fastPut(localFile, remoteFile, true)))
+                        fileInput.push(this.fileLimit(() => this.fastPut(localFile, remoteFile, true)))
                     }
                 }
                 await Promise.all(fileInput)
@@ -1885,7 +1886,6 @@ export default {
         },
         async menuRemoteAction(action) {
             if (action === 'download') {
-                const fileLimit = pLimit(2)
                 const fileInput = []
                 let curRemotePath = this.curRemotePath
                 let curLocalPath = this.curLocalPath
@@ -1921,7 +1921,7 @@ export default {
                             }
                             this.queuedFilesList = Object.values(this.queuedFilesObject)
                             let remoteFile = fileList[i].replace(curLocalPath, curRemotePath)
-                            fileInput.push(fileLimit(() => this.fastGet(remoteFile, fileList[i]), false))
+                            fileInput.push(this.fileLimit(() => this.fastGet(remoteFile, fileList[i]), false))
                         }
                     } else if (selectedRow.kind === 'file') {
                         const remoteFile = this.curRemotePath + '/' + selectedRow.name
@@ -1935,7 +1935,7 @@ export default {
                             progress: 0
                         }
                         this.queuedFilesList = Object.values(this.queuedFilesObject)
-                        fileInput.push(fileLimit(() => this.fastGet(remoteFile, localFile, true)))
+                        fileInput.push(this.fileLimit(() => this.fastGet(remoteFile, localFile, true)))
                     }
                 }
                 await Promise.all(fileInput)
@@ -2035,8 +2035,19 @@ export default {
             if (row.kind != '') {
                 this.isRemoteMenuVisible = true
                 this.isLocalMenuVisible = false
-                this.menuTop = event.clientY
-                this.menuLeft = event.clientX
+                if (event.clientX + 290 > this.clientWidth && event.clientY + 145 > this.clientHeight) {
+                    this.menuTop = event.clientY - 145
+                    this.menuLeft = event.clientX - 290
+                } else if (event.clientX + 290 > this.clientWidth) {
+                    this.menuTop = event.clientY
+                    this.menuLeft = event.clientX - 290
+                } else if (event.clientY + 145 > this.clientHeight) {
+                    this.menuTop = event.clientY - 145
+                    this.menuLeft = event.clientX
+                } else {
+                    this.menuTop = event.clientY
+                    this.menuLeft = event.clientX
+                }
             }
         },
         getLocalDir(directoryPath) {
