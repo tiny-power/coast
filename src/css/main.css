@@ -152,6 +152,11 @@ li {
     padding: .35em .35em .35em .35em;
 }
 
+.main-markdown blockquote p code {
+    width: auto;
+    padding: .05em .35em 0;
+}
+
 .main-markdown p {
     margin: 16px 0 16px 0;
     line-height: 1.6;

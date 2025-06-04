@@ -1254,27 +1254,29 @@ export default {
                 let codeItems = document.querySelectorAll('.main-markdown p code')
                 let inputItems = document.querySelectorAll('.cheatsheet .el-input__inner')
                 codeItems.forEach(item => {
-                    let code = item.textContent
-                    var pasteDiv = document.createElement('div')
-                    pasteDiv.textContent = 'PASTE'
-                    pasteDiv.style.position = 'absolute'
-                    pasteDiv.style.top = '0px'
-                    pasteDiv.style.right = '0px'
-                    pasteDiv.style.background = 'rgb(121, 123, 136, 0.1)'
-                    pasteDiv.style.cursor = 'pointer'
-                    pasteDiv.style.fontSize = '8px'
-                    pasteDiv.style.fontWeight = 'bold'
-                    pasteDiv.style.padding = '4px 8px'
-                    pasteDiv.style.borderBottomLeftRadius = '6px'
-                    pasteDiv.style.fontWeight = 'bold'
-                    pasteDiv.addEventListener('click', () => {
-                        code = code.replace(/{{/g, '')
-                        code = code.replace(/}}/g, '')
-                        code = code.replace(/\[/g, '')
-                        code = code.replace(/\|[\s\S]*?\]/g, '')
-                        this.handlePaste(code)
-                    })
-                    item.appendChild(pasteDiv)
+                    if (item.parentElement.children.length === 1) {
+                        let code = item.textContent
+                        var pasteDiv = document.createElement('div')
+                        pasteDiv.textContent = 'PASTE'
+                        pasteDiv.style.position = 'absolute'
+                        pasteDiv.style.top = '0px'
+                        pasteDiv.style.right = '0px'
+                        pasteDiv.style.background = 'rgb(121, 123, 136, 0.1)'
+                        pasteDiv.style.cursor = 'pointer'
+                        pasteDiv.style.fontSize = '8px'
+                        pasteDiv.style.fontWeight = 'bold'
+                        pasteDiv.style.padding = '4px 8px'
+                        pasteDiv.style.borderBottomLeftRadius = '6px'
+                        pasteDiv.style.fontWeight = 'bold'
+                        pasteDiv.addEventListener('click', () => {
+                            code = code.replace(/{{/g, '')
+                            code = code.replace(/}}/g, '')
+                            code = code.replace(/\[/g, '')
+                            code = code.replace(/\|[\s\S]*?\]/g, '')
+                            this.handlePaste(code)
+                        })
+                        item.appendChild(pasteDiv)
+                    }
                 })
                 if (this.theme.type === 'light') {
                     h1Items.forEach(item => {
