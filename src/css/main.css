@@ -69,3 +69,90 @@ li {
     font-size: 13px !important;
     cursor: pointer;
 }
+
+.main-markdown h1:first-child,
+.main-markdown h2:first-child,
+.main-markdown h3:first-child,
+.main-markdown h4:first-child,
+.main-markdown h5:first-child,
+.main-markdown h6:first-child  {
+    margin-top: 0;
+}
+
+.main-markdown a {
+    cursor: pointer;
+    text-decoration-color: #ff5555;
+    color: #ff5555;
+    word-wrap: break-word
+}
+
+.main-markdown blockquote {
+    font-size: 14px;
+    line-height: 1.6;
+    margin: 12px 0;
+    box-sizing: border-box;
+    padding-left: 12px;
+    border-left: 4px solid rgb(244, 244, 248);
+}
+
+.main-markdown h1,
+.main-markdown h2,
+.main-markdown h3,
+.main-markdown h4,
+.main-markdown h5,
+.main-markdown h6 {
+    padding-left: 0;
+    position: relative;
+    font-size: 30px;
+    font-weight: 500;
+    margin: 28px 0 20px 0;
+}
+
+.main-markdown h1 {
+    font-size: 30px;
+}
+
+.main-markdown h2,
+.main-markdown h3 {
+    font-size: 22px;
+    margin: 28px 0 20px 0;
+}
+
+.main-markdown h4,
+.main-markdown h5,
+.main-markdown h6 {
+    font-size: 16px;
+}
+
+.main-markdown ul {
+    padding: 0 0 0 1em;
+}
+
+.main-markdown ul li {
+    list-style-type: disc;
+    margin-bottom: 0;
+    font-size: 14px;
+}
+
+.main-markdown code {
+    line-height: 1.4;
+    display: inline-block;
+    box-sizing: border-box;
+    padding: .05em .35em 0;
+    border-radius: 4px;
+    font-size: 1em;
+    color: rgb(51, 54, 57);
+    background-color: rgb(244, 244, 248);
+    border: 1px solid #0000;
+}
+
+.main-markdown p code {
+    position: relative;
+    width: 100%;
+    padding: .35em .35em .35em .35em;
+}
+
+.main-markdown p {
+    margin: 16px 0 16px 0;
+    line-height: 1.6;
+}

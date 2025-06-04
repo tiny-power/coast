@@ -693,6 +693,28 @@
                                 'align-items': 'center'
                             }"
                         >
+                            <i
+                                class="el-icon-coffee-cup"
+                                :style="{
+                                    'font-size': '18px',
+                                    background: attribute === 'cheatsheet' ? 'rgb(121, 123, 136, 0.2)' : 'transparent',
+                                    padding: '6px',
+                                    'border-radius': '8px',
+                                    cursor: 'pointer',
+                                    color: attribute === 'cheatsheet' ? theme.foreground : '#797b88'
+                                }"
+                                @click="handleClickCheatsheet"
+                            ></i>
+                        </div>
+                        <div
+                            :style="{
+                                width: '36px',
+                                height: '36px',
+                                display: 'flex',
+                                'justify-content': 'center',
+                                'align-items': 'center'
+                            }"
+                        >
                             <svg
                                 viewBox="0 0 1024 1024"
                                 version="1.1"
@@ -751,6 +773,40 @@
                                 ></path>
                             </svg>
                         </div>
+                    </div>
+                    <div v-if="attribute === 'cheatsheet'">
+                        <div style="margin-top: 10px">
+                            <el-autocomplete
+                                v-model="cheatsheetValue"
+                                :fetch-suggestions="querySearchCheatsheet"
+                                placeholder="kill"
+                                :trigger-on-focus="false"
+                                @select="handleSelectCheatsheet"
+                                clearable
+                                size="medium"
+                                style="width: 100%"
+                                class="cheatsheet"
+                            >
+                                <template slot-scope="{ item }">
+                                    <div style="display: flex">
+                                        <div style="flex: 1">{{ item.name }}</div>
+                                        <div style="width: 30px; text-align: right" v-if="item.language != 'en'">
+                                            {{ item.language }}
+                                        </div>
+                                    </div>
+                                </template>
+                            </el-autocomplete>
+                        </div>
+                        <div
+                            v-html="cheatsheetHtml"
+                            :style="{
+                                height: clientHeight - 165 + 'px',
+                                overflow: 'auto',
+                                'border-radius': '6px',
+                                'margin-top': '10px'
+                            }"
+                            class="main-markdown"
+                        ></div>
                     </div>
                     <div v-if="attribute === 'snippet' && !showAddSnippet && !showEditSnippet">
                         <div
@@ -1043,6 +1099,7 @@ import '@xterm/xterm/css/xterm.css'
 import os from 'os'
 import { filesize } from 'filesize'
 import pLimit from 'p-limit'
+import { marked } from 'marked'
 const dayjs = require('dayjs')
 const path = require('path')
 const { Client } = require('ssh2')
@@ -1063,7 +1120,7 @@ export default {
             platform: os.platform(),
             settingFlag: true,
             themes: themes,
-            attribute: 'snippet',
+            attribute: 'cheatsheet',
             snippetList: [],
             snippetForm: {
                 name: '',
@@ -1127,10 +1184,15 @@ export default {
             limit: null,
             isPay: false,
             licenseVisible: false,
-            licenseKey: ''
+            licenseKey: '',
+            cheatsheetValue: '',
+            cheatsheetOptions: [],
+            cheatsheetHtml: '',
+            cheatsheetPath: ''
         }
     },
     mounted() {
+        this.getCheatsheet()
         this.isPay = localStorage.getItem('isPay') || false
         let themeName = localStorage.getItem('theme') || 'Monokai'
         localStorage.setItem('theme', themeName)
@@ -1180,6 +1242,156 @@ export default {
         this.getHome()
     },
     methods: {
+        handleClickCheatsheet() {
+            this.attribute = 'cheatsheet'
+            this.changecheatsheetTheme()
+        },
+        changecheatsheetTheme() {
+            this.$nextTick(() => {
+                let h1Items = document.querySelectorAll('.main-markdown h1')
+                let liItems = document.querySelectorAll('.main-markdown ul li')
+                let pItems = document.querySelectorAll('.main-markdown p')
+                let codeItems = document.querySelectorAll('.main-markdown p code')
+                let inputItems = document.querySelectorAll('.cheatsheet .el-input__inner')
+                codeItems.forEach(item => {
+                    let code = item.textContent
+                    var pasteDiv = document.createElement('div')
+                    pasteDiv.textContent = 'PASTE'
+                    pasteDiv.style.position = 'absolute'
+                    pasteDiv.style.top = '0px'
+                    pasteDiv.style.right = '0px'
+                    pasteDiv.style.background = 'rgb(121, 123, 136, 0.1)'
+                    pasteDiv.style.cursor = 'pointer'
+                    pasteDiv.style.fontSize = '8px'
+                    pasteDiv.style.fontWeight = 'bold'
+                    pasteDiv.style.padding = '4px 8px'
+                    pasteDiv.style.borderBottomLeftRadius = '6px'
+                    pasteDiv.style.fontWeight = 'bold'
+                    pasteDiv.addEventListener('click', () => {
+                        code = code.replace(/{{/g, '')
+                        code = code.replace(/}}/g, '')
+                        code = code.replace(/\[/g, '')
+                        code = code.replace(/\|[\s\S]*?\]/g, '')
+                        this.handlePaste(code)
+                    })
+                    item.appendChild(pasteDiv)
+                })
+                if (this.theme.type === 'light') {
+                    h1Items.forEach(item => {
+                        item.style.color = '#21222c'
+                    })
+                    liItems.forEach(item => {
+                        item.style.color = '#21222c'
+                    })
+                    pItems.forEach(item => {
+                        item.style.color = '#21222c'
+                    })
+                    inputItems.forEach(item => {
+                        item.style.color = '#21222c'
+                    })
+                } else {
+                    h1Items.forEach(item => {
+                        item.style.color = '#f8f8f2'
+                    })
+                    liItems.forEach(item => {
+                        item.style.color = '#f8f8f2'
+                    })
+                    pItems.forEach(item => {
+                        item.style.color = '#f8f8f2'
+                    })
+                    inputItems.forEach(item => {
+                        item.style.color = '#f8f8f2'
+                    })
+                }
+            })
+        },
+        querySearchCheatsheet(queryString, cb) {
+            var results = queryString
+                ? this.cheatsheetOptions.filter(this.createFilterCheatsheet(queryString))
+                : this.cheatsheetOptions
+            cb(results)
+        },
+        createFilterCheatsheet(queryString) {
+            return item => {
+                return item.name.toLowerCase().indexOf(queryString.toLowerCase()) === 0
+            }
+        },
+        handleSelectCheatsheet(item) {
+            this.cheatsheetValue = item.name
+            item.name = item.name.replace(/ /g, '-')
+            fs.readFile(
+                path.join(this.cheatsheetPath, 'pages.' + item.language, item.platform, item.name + '.md'),
+                'utf-8',
+                (err, markContent) => {
+                    if (err) {
+                        throw err
+                    } else {
+                        this.cheatsheetHtml = marked.parse(markContent)
+                        this.changecheatsheetTheme()
+                    }
+                }
+            )
+        },
+        async getCheatsheet() {
+            this.cheatsheetPath = await window.ipcRenderer.invoke('getCheatsheetPath')
+            let directoryArray = [
+                {
+                    language: 'en',
+                    platform: 'common'
+                },
+                {
+                    language: 'en',
+                    platform: 'linux'
+                },
+                // {
+                //     language: 'en',
+                //     platform: 'osx'
+                // },
+                // {
+                //     language: 'en',
+                //     platform: 'windows'
+                // },
+                {
+                    language: 'zh',
+                    platform: 'common'
+                },
+                {
+                    language: 'zh',
+                    platform: 'linux'
+                }
+                // {
+                //     language: 'zh',
+                //     platform: 'osx'
+                // },
+                // {
+                //     language: 'zh',
+                //     platform: 'windows'
+                // }
+            ]
+            let bigFiles = []
+            let filesWithoutExt = []
+            for (let i = 0; i < directoryArray.length; i++) {
+                let files = fs.readdirSync(
+                    path.join(this.cheatsheetPath, 'pages.' + directoryArray[i].language, directoryArray[i].platform)
+                )
+                bigFiles = bigFiles.concat(files)
+                for (let j = 0; j < files.length; j++) {
+                    let file = files[j]
+                    if (file.indexOf('-') > -1) {
+                        if (bigFiles.includes(file.substring(0, file.indexOf('-')) + '.md')) {
+                            file = file.replace(/-/g, ' ')
+                        }
+                    }
+                    filesWithoutExt.push({
+                        language: directoryArray[i].language,
+                        platform: directoryArray[i].platform,
+                        name: path.parse(file).name
+                    })
+                }
+            }
+            //filesWithoutExt.sort()
+            this.cheatsheetOptions = filesWithoutExt
+        },
         sizeFormatter(row, column) {
             return row.kind === 'file' ? filesize(row.size, { standard: 'jedec' }) : ''
         },
@@ -2262,6 +2474,7 @@ export default {
                     this.licenseVisible = true
                 }
             }
+            this.changecheatsheetTheme()
         },
         async handleSaveSession() {
             this.$refs.sessionForm.validate(valid => {
@@ -2545,6 +2758,7 @@ export default {
                     }
                 })
             })
+            this.changecheatsheetTheme()
         },
         removeTab(targetName) {
             let activeName = ''

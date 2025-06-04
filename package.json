@@ -1,6 +1,6 @@
 {
     "name": "coast",
-    "version": "1.0.4",
+    "version": "1.0.5",
     "private": true,
     "description": "A Modern GUI For Terminal",
     "author": {
@@ -28,6 +28,7 @@
         "electron": "22.3.25",
         "element-ui": "^2.15.14",
         "filesize": "^10.1.6",
+        "marked": "^15.0.12",
         "md5": "^2.2.1",
         "node-pty": "^1.1.0-beta34",
         "p-limit": "^3.1.0",

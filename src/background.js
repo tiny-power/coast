@@ -159,6 +159,18 @@ ipcMain.handle('getHome', async () => {
     }
 })
 
+ipcMain.handle('getCheatsheetPath', async () => {
+    let resourcesPath = process.resourcesPath
+    if (process.platform == 'darwin') {
+        resourcesPath = resourcesPath.replace('node_modules/electron/dist/Electron.app/Contents/Resources', 'public')
+    } else if (process.platform == 'win32') {
+        resourcesPath = resourcesPath.replace('node_modules\\electron\\dist\\resources', 'public')
+    } else {
+        resourcesPath = resourcesPath.replace('node_modules/electron/dist/Electron.app/Contents/Resources', 'public')
+    }
+    return path.join(resourcesPath, process.env.WEBPACK_DEV_SERVER_URL ? '' : 'app.asar.unpacked', 'cheatsheet')
+})
+
 ipcMain.handle('db_all', async (event, query, params = []) => {
     const stmt = db.prepare(query)
     return stmt.all(params)

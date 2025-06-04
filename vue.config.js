@@ -23,7 +23,8 @@ module.exports = {
         '@xterm/addon-fit',
         '@xterm/addon-clipboard',
         '@xterm/addon-search',
-        '@xterm/addon-web-links'
+        '@xterm/addon-web-links',
+        'marked'
     ],
     pluginOptions: {
         electronBuilder: {
@@ -76,7 +77,13 @@ module.exports = {
                     installerSidebar: 'public/sidebar.bmp',
                     uninstallerSidebar: 'public/sidebar.bmp'
                 },
-                asar: true
+                asar: true,
+                extraResources: [
+                    {
+                        from: './public/cheatsheet/',
+                        to: './app.asar.unpacked/cheatsheet'
+                    }
+                ]
             }
         }
     }
