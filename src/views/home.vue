@@ -2576,8 +2576,19 @@ export default {
         showSnippetMenu(event, index) {
             this.index = index
             this.isSnippetMenuVisible = true
-            this.menuTop = event.clientY
-            this.menuLeft = event.clientX
+            if (event.clientX + 140 > this.clientWidth && event.clientY + 100 > this.clientHeight) {
+                this.menuTop = event.clientY - 100
+                this.menuLeft = event.clientX - 140
+            } else if (event.clientX + 140 > this.clientWidth) {
+                this.menuTop = event.clientY
+                this.menuLeft = event.clientX - 140
+            } else if (event.clientY + 100 > this.clientHeight) {
+                this.menuTop = event.clientY - 100
+                this.menuLeft = event.clientX
+            } else {
+                this.menuTop = event.clientY
+                this.menuLeft = event.clientX
+            }
         },
         menuSnippetAction(action) {
             this.isSnippetMenuVisible = false
