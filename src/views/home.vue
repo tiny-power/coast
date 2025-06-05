@@ -1401,7 +1401,7 @@ export default {
                     })
                 }
             }
-            //filesWithoutExt.sort()
+            filesWithoutExt.sort((a, b) => a.name.localeCompare(b.name, 'zh'))
             this.cheatsheetOptions = filesWithoutExt
         },
         sizeFormatter(row, column) {
