@@ -997,7 +997,7 @@
                     </div>
                     <div v-if="attribute === 'color'">
                         <div style="display: flex; align-items: center">
-                            <span style="color: #797b88; flex: 1; font-size: 15px">Text Size</span>
+                            <span style="color: #797b88; flex: 1; font-size: 14px">Text Size</span>
                             <el-input-number
                                 v-model="textSize"
                                 :step="1"
