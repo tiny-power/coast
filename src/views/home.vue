@@ -1207,6 +1207,7 @@ export default {
         }
     },
     mounted() {
+        this.textSize = localStorage.getItem('textSize') || 14
         this.fileLimit = pLimit(2)
         this.getCheatsheet()
         this.isPay = localStorage.getItem('isPay') || false
@@ -1259,6 +1260,7 @@ export default {
     },
     methods: {
         handleTextSizeChange() {
+            localStorage.setItem('textSize', this.textSize)
             for (const key in this.tabs) {
                 this.$nextTick(() => {
                     let item = this.tabs[key]
