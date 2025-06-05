@@ -996,8 +996,21 @@
                         </div>
                     </div>
                     <div v-if="attribute === 'color'">
+                        <div style="display: flex; align-items: center">
+                            <span style="color: #797b88; flex: 1; font-size: 15px">Text Size</span>
+                            <el-input-number
+                                v-model="textSize"
+                                :step="1"
+                                :min="8"
+                                :max="36"
+                                :step-strictly="true"
+                                style="width: 150px"
+                                size="medium"
+                                @change="handleTextSizeChange"
+                            ></el-input-number>
+                        </div>
                         <div style="color: #797b88; margin-top: 10px; margin-bottom: 15px; font-size: 14px">Themes</div>
-                        <div :style="{ height: clientHeight - 155 + 'px', overflow: 'auto' }">
+                        <div :style="{ height: clientHeight - 195 + 'px', overflow: 'auto' }">
                             <div
                                 v-for="(item, key) in themes"
                                 :key="key"
@@ -1189,7 +1202,8 @@ export default {
             cheatsheetOptions: [],
             cheatsheetHtml: '',
             cheatsheetPath: '',
-            fileLimit: null
+            fileLimit: null,
+            textSize: 14
         }
     },
     mounted() {
@@ -1244,6 +1258,20 @@ export default {
         this.getHome()
     },
     methods: {
+        handleTextSizeChange() {
+            for (const key in this.tabs) {
+                this.$nextTick(() => {
+                    let item = this.tabs[key]
+                    item.xterm.options.fontSize = this.textSize
+                    item.fitAddon.fit()
+                    if (item.protocol === 'shell') {
+                        window.ipcRenderer.invoke('resize', key, item.xterm.rows, item.xterm.cols)
+                    } else if (item.protocol === 'ssh') {
+                        item.stream.setWindow(item.xterm.rows, item.xterm.cols)
+                    }
+                })
+            }
+        },
         handleClickCheatsheet() {
             this.attribute = 'cheatsheet'
             this.changecheatsheetTheme()
@@ -2870,7 +2898,7 @@ export default {
                 cursorBlink: this.platform === 'win32' ? true : false,
                 cursorStyle: this.platform === 'win32' ? 'underline' : 'block',
                 fontFamily: 'Source Code Pro, monospace',
-                fontSize: 14,
+                fontSize: this.textSize,
                 lineHeight: 1.2,
                 theme: this.theme
             })
@@ -3226,5 +3254,13 @@ li:hover {
 }
 ::v-deep .el-input.is-disabled .el-input__inner {
     background-color: rgb(121, 123, 136, 0.1);
+}
+::v-deep .el-input-number__decrease {
+    background: transparent;
+    border-right: 1px solid #797b88;
+}
+::v-deep .el-input-number__increase {
+    background: transparent;
+    border-left: 1px solid #797b88;
 }
 </style>
